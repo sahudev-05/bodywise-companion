@@ -1,11 +1,10 @@
 // All quantities use mL. Each scheduled slot has at most one event per local day.
 const Companion = (() => {
-  const source = 'https://bebodywise.com/product/aha-bha-body-pack';
   const catalog = {
     lotion: { name:'5% Lactic Acid Body Lotion', short:'Body lotion', size:200, type:'Body care',
-      description:'A post-shower body lotion with lactic acid.', guide:'After showering, massage the lotion over the body until absorbed.', source },
+      description:'A post-shower body lotion with lactic acid.', guide:'After showering, massage the lotion over the body until absorbed. Use broad-spectrum sunscreen during the day, as the brand directs.', source:'https://bebodywise.com/product/5-lactic-acid-body-lotion' },
     wash: { name:'1% Salicylic Acid Body Wash', short:'Body wash', size:250, type:'Body care',
-      description:'A rinse-off cleanser with salicylic acid.', guide:'Apply to wet skin, rinse thoroughly, then pat dry.', source }
+      description:'A rinse-off cleanser with salicylic acid.', guide:'Apply to wet skin, rinse thoroughly, then pat dry.', source:'https://bebodywise.com/product/1-salicylic-acid-body-wash-250ml-xp' }
   };
   const weekdays = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   const dateKey = (date = new Date()) => [date.getFullYear(), String(date.getMonth()+1).padStart(2,'0'), String(date.getDate()).padStart(2,'0')].join('-');

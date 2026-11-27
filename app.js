@@ -31,7 +31,7 @@ let toastTimer;
 const fmt = n => Number(n.toFixed(2)).toLocaleString();
 const shelf = () => state[state.mode];
 const bottles = () => Object.values(shelf().bottles);
-const page = () => ['today','shelf','journal'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'today';
+const page = () => location.hash.split('/')[0]==='#ingredients' ? 'ingredients' : ['today','shelf','journal'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'today';
 const button = (action,label,attrs='',cl='') => `<button class="${cl}" data-action="${action}" ${attrs}>${label}</button>`;
 const idAttr = id => `data-id="${id}"`;
 const guideBtn = id => button('guide','Read product guide ↗',idAttr(id),'linkbtn');
@@ -58,24 +58,28 @@ function slotsToday() {
     .flatMap(b=>b.slots.map(slot=>({b,slot})))
     .sort((a,b)=>b.slot.localeCompare(a.slot));
 }
-function hero(b) {
-  const p = catalog[b.id], est = estimate(b), percent = Math.round(est.percent);
-  const days = est.days === null ? '—' : est.days > 0 && est.days < 1 ? '<1' : String(Math.round(est.days));
-  const title = est.days === null ? 'Bottle estimate' : 'Estimated bottle life';
-  const sinceCheck = shelf().events.some(e=>e.id===b.id && e.revision===b.revision && e.status==='Used' && !e.calibrated);
-  const fillLabel = sinceCheck ? 'last entered' : 'remaining';
-  return `<section class="hero" style="--fill:${percent}%" aria-label="Bottle overview">
-    <div class="stage" aria-hidden="true"><div class="ground"></div><div class="bottle"><i class="pump"></i><div class="label">${p.short}<b>${b.size} mL</b></div></div><div class="scale"><i></i></div><span class="art-caption">BOTTLE ILLUSTRATION</span></div>
-    <div class="hero-info"><div class="eyebrow">${title}${state.mode==='example'?' · Example':''}</div>
-    <h2>${p.name}</h2><div class="display">${sinceCheck || est.days===null ? fmt(b.remaining)+' mL' : days+' days'}</div>
-    <small>${b.paused?'Routine paused':sinceCheck?'Last entered quantity. Update after unmeasured uses.':est.days===null?'Enter your measured output to estimate bottle life.':'Approximately, at your scheduled pace'}</small>
-    <div class="meter"><i></i></div><div class="spread"><small>${fmt(b.remaining)} of ${b.size} mL</small><small>${percent}% ${fillLabel}</small></div>
-    ${percent<=15?'<p class="warn">Running low? Check the bottle and update your estimate.</p>':''}
-    ${button('estimate','See estimate details →',idAttr(b.id),'linkbtn')}</div></section>`;
+function bottleForecast(b) {
+  const est = estimate(b), percent = Math.round(est.percent);
+  const unmeasured = shelf().events.some(e=>e.id===b.id && e.revision===b.revision && e.status==='Used' && !e.calibrated);
+  const showDays = est.days!==null && !unmeasured;
+  const number = showDays ? (est.days>0 && est.days<1?'&lt;1':Math.round(est.days)) : fmt(b.remaining);
+  const caption = b.paused ? 'Routine paused' : unmeasured ? 'Last entered quantity. Update after unmeasured uses.' :
+    showDays ? 'Estimated bottle life at your scheduled pace' : 'Add measured dispensing volume to estimate days left.';
+  return `<div class="forecast"><div class="forecast-main"><strong>${number} ${showDays?'days':'mL'}</strong><small>${caption}</small></div>
+  <div class="meter" style="--fill:${percent}%"><i></i></div><div class="spread"><small>${fmt(b.remaining)} of ${b.size} mL</small><small>${percent}% ${unmeasured?'last entered':'remaining'}</small></div>
+  ${percent<=15?'<p class="warn">Running low? Check the bottle and update your estimate.</p>':''}
+  ${button('estimate','See estimate details →',idAttr(b.id),'linkbtn')}</div>`;
+}
+function hero(id) {
+  const p=catalog[id], b=shelf().bottles[id];
+  return `<div class="hero">${bottleStage(id)}<section class="hero-info">
+  <div class="kicker">${id==='lotion'?'Leave-on moisturiser':'Rinse-off cleanser'}</div><h2>${p.name}</h2>
+  <p>${p.description}</p><div class="actions"><a class="primary btn" href="#ingredients/${id}">Explore ingredients →</a>
+  ${guideBtn(id)}</div>${b?bottleForecast(b):`<div class="forecast"><p>Add this bottle to track your own schedule and remaining quantity.</p>${button('edit','Add to shelf',idAttr(id))}</div>`}</section></div>`;
 }
 function routine() {
   const slots = slotsToday();
-  if (!slots.length) return '<div class="card">No uses scheduled today. You can manage your schedule in My shelf.</div>';
+  if (!slots.length) return '<div class="card">No uses scheduled today. <a href="#shelf">Manage your shelf →</a></div>';
   return `<div class="card">${slots.map(({b,slot})=>{
     const event = shelf().events.find(e=>e.day===dateKey() && e.id===b.id && e.slot===slot);
     const attrs = `${idAttr(b.id)} data-slot="${slot}"`;
@@ -85,19 +89,19 @@ function routine() {
   }).join('')}</div>`;
 }
 function catalogTiles() {
-  return `<div class="tiles">${Object.entries(catalog).map(([id,p])=>`<article class="card"><div class="slot">${p.type} · ${p.size} mL</div>
-    <h3>${p.name}</h3><p>${p.description}</p>${guideBtn(id)}<div class="actions">${shelf().bottles[id]?editBtn(id,'Bottle settings'):button('edit','Add to shelf',idAttr(id),'primary')}</div></article>`).join('')}</div>`;
+  return `<div class="tiles">${Object.entries(catalog).map(([id,p])=>`<article class="card catalog-card"><div class="catalog-photo">${packshot(id)}</div><div class="slot">${p.type} · ${p.size} mL</div>
+    <h3>${p.name}</h3><p>${p.description}</p><a href="#ingredients/${id}">View ingredients →</a><div class="actions">${shelf().bottles[id]?editBtn(id,'Bottle settings'):button('edit','Add to shelf',idAttr(id),'primary')}</div></article>`).join('')}</div>`;
 }
 function today() {
-  const bs = bottles(), b = shelf().bottles[selected] || bs[0];
-  const choice = bs.length >1 ? `<label>Featured bottle<select id="featured">${bs.map(x=>`<option value="${x.id}" ${x===b?'selected':''}>${catalog[x.id].short}</option>`).join('')}</select></label>`:'';
+  const id = selected || bottles()[0]?.id || 'lotion';
   return `<div class="eyebrow">${new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'})}</div>
-    <div class="intro"><h1>Your daily routine.</h1>${choice}</div>
-    ${!b?'<div class="card empty"><h2>Start with a bottle you own.</h2><p>Choose your product, then set a schedule that matches your label.</p></div>'+catalogTiles():hero(b)+`<div class="below"><section><div class="section-title"><h2>Today’s check-in</h2></div>${routine()}</section>
-    <section><div class="section-title"><h2>Product guide</h2></div><article class="card guide"><div class="slot">How to use · ${catalog[b.id].short}</div><p>${catalog[b.id].guide}</p>${guideBtn(b.id)}</article></section></div>`}`;
+    <div class="intro"><h1>Your routine</h1>${productTabs(id,'feature')}</div>${hero(id)}
+    <div class="below"><section><div class="section-title"><h2>Today’s check-in</h2></div>${routine()}</section>
+    <section><div class="section-title"><h2>Key ingredients</h2><a href="#ingredients/${id}">Full formula →</a></div>
+    ${activeCards(id)}</section></div>`;
 }
 function shelfPage() {
-  return `<div class="eyebrow">Product library</div><div class="intro"><h1>My shelf.</h1></div>
+  return `<div class="eyebrow">Product library</div><div class="intro"><h1>My shelf</h1></div>
     <div class="section-title"><h2>Your bottles</h2></div>${bottles().length?
     `<div class="tiles">${bottles().map(b=>`<article class="card"><div class="slot">${b.paused?'Paused':b.slots.join(' + ')} · ${b.days.length===7?'Every day':b.days.map(i=>weekdays[i]).join(', ')}</div>
     <h3>${catalog[b.id].name}</h3><p>${fmt(b.remaining)} / ${b.size} mL recorded</p>
@@ -107,7 +111,7 @@ function shelfPage() {
 }
 function journal() {
   const events = [...shelf().events].reverse();
-  return `<div class="eyebrow">Routine history</div><div class="intro"><h1>Your journal.</h1></div><div class="card">${events.length?events.map(e=>`<div class="history"><div><small>${e.day} · ${e.slot}</small><h3>${catalog[e.id].name}</h3></div><div>${e.status}<br><small>${e.status==='Skipped'?'No deduction':e.calibrated?fmt(e.used)+' mL estimated':'Quantity unmeasured'}</small></div></div>`).join(''):'<h2>No check-ins yet.</h2><p>Log or skip a scheduled use on Today. Each entry will appear here.</p><a href="#today">Go to today →</a>'}</div>`;
+  return `<div class="eyebrow">Routine history</div><div class="intro"><h1>Your journal</h1></div><div class="card">${events.length?events.map(e=>`<div class="history"><div><small>${e.day} · ${e.slot}</small><h3>${catalog[e.id].name}</h3></div><div>${e.status}<br><small>${e.status==='Skipped'?'No deduction':e.calibrated?fmt(e.used)+' mL estimated':'Quantity unmeasured'}</small></div></div>`).join(''):'<h2>No check-ins yet.</h2><p>Log or skip a scheduled use on Today. Each entry will appear here.</p><a href="#today">Go to today →</a>'}</div>`;
 }
 function render() {
   const view = page();
@@ -115,10 +119,11 @@ function render() {
   modeButton.textContent = state.mode==='example'?'Example shelf':'Personal shelf';
   modeButton.setAttribute('aria-label',modeButton.textContent);
   for (const a of document.querySelectorAll('nav a')) {
-    if(a.hash==='#'+view) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current');
+    if(a.hash.split('/')[0]==='#'+view) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current');
   }
-  main.innerHTML = (storageWarning?`<p role="alert" class="notice">${storageWarning}</p>`:'')+({today,shelf:shelfPage,journal}[view]());
-  document.title = 'Bodywise Companion · '+({today:'Today',shelf:'My shelf',journal:'Journal'}[view]);
+  main.innerHTML = (storageWarning?`<p role="alert" class="notice">${storageWarning}</p>`:'')+({today,shelf:shelfPage,journal,ingredients:ingredientPage}[view]());
+  mountViewer();
+  document.title = 'Bodywise Companion · '+({today:'Today',shelf:'My shelf',journal:'Journal',ingredients:'Ingredients'}[view]);
 }
 function settings(id) {
   const b = shelf().bottles[id] || newBottle(id);
@@ -164,16 +169,19 @@ document.addEventListener('click',e=>{
     const example = state.mode==='example';
     modal('Choose your shelf',`<div class="dialog-copy"><p>${example?'You’re exploring an example bottle. Its amounts and schedule are illustrative.':'Your personal shelf holds the products and schedule you entered.'}</p><p class="muted">Each shelf is saved separately in this browser. Clearing browser data removes your records.</p>${button('switch',example?'Start or open my personal shelf':'Explore the example shelf','','primary')}</div>`);
   }
+  if(act==='feature'){selected=id;render();}
+  if(act==='formula'){location.hash='ingredients/'+id;}
   if(act==='close') dialog.close();
   if(act==='switch'){state.mode=state.mode==='example'?'personal':'example';selected='';dialog.close();save('Shelf switched.');}
   if(act==='guide'){
     const p=catalog[id];
-    modal(p.name,`<div class="dialog-copy"><p class="slot">Be Bodywise · ${p.size} mL</p><h3>How to use</h3><p>${p.guide}</p><h3>Before first use</h3><p>The brand advises a patch test. Avoid use if you notice redness, itching or irritation. Check your own label for the directions and ingredients for your pack.</p><a href="${p.source}" target="_blank" rel="noopener noreferrer">Official product instructions ↗</a></div>`);
+    modal(p.name,`<div class="dialog-copy"><p class="slot">Be Bodywise · ${p.size} mL</p><h3>How to use</h3><p>${p.guide}</p><h3>Before first use</h3><p>The brand advises a patch test. Avoid use if you notice redness, itching or irritation. Check your own label for the directions and ingredients for your pack.</p><a href="${p.source}" target="_blank" rel="noopener noreferrer">Official product instructions ↗</a><div class="actions">${button('open-formula','See full formula →',idAttr(id))}</div></div>`);
   }
+  if(act==='open-formula'){dialog.close();location.hash='ingredients/'+id;}
   if(act==='edit') settings(id);
   if(act==='estimate' && b){
     const est=estimate(b);
-    modal('Behind the estimate',`<div class="dialog-copy"><p>${catalog[id].name}</p><p>${fmt(b.remaining)} mL recorded from a ${b.size} mL bottle.</p><p>${b.output?`${b.units} ${b.unit}(s) × ${b.output} mL × ${b.slots.length} use(s) per scheduled day. Your schedule covers ${b.days.length} day(s) per week.`:'Dispensing volume is unknown. Update the remaining amount manually after use.'}</p>${est.daily?`<p>Weekly usage averages ${fmt(est.daily)} mL per calendar day. Divide the remaining amount by that average to estimate days left.</p>`:''}<p class="hint">${state.mode==='example'?'The example uses illustrative settings. ':''}The drawing shows the recorded level. Actual pump output and use can vary.</p>${editBtn(id,'Adjust estimate')}</div>`);
+    modal('Behind the estimate',`<div class="dialog-copy"><p>${catalog[id].name}</p><p>${fmt(b.remaining)} mL recorded from a ${b.size} mL bottle.</p><p>${b.output?`${b.units} ${b.unit}(s) × ${b.output} mL × ${b.slots.length} use(s) per scheduled day. Your schedule covers ${b.days.length} day(s) per week.`:'Dispensing volume is unknown. Update the remaining amount manually after use.'}</p>${est.daily?`<p>Weekly usage averages ${fmt(est.daily)} mL per calendar day. Divide the remaining amount by that average to estimate days left.</p>`:''}<p class="hint">${state.mode==='example'?'The example uses illustrative settings. ':''}The level bar shows the recorded quantity. Actual pump output and use can vary.</p>${editBtn(id,'Adjust estimate')}</div>`);
   }
   if(act==='pause' && b){b.paused=!b.paused;save(b.paused?'Routine paused.':'Routine resumed.');}
   if(act==='used'||act==='skipped'){
