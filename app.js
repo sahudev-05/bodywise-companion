@@ -27,6 +27,7 @@ function load() {
 }
 let state = load();
 let selected = '';
+let discoveryStep = 0;
 let toastTimer;
 const fmt = n => Number(n.toFixed(2)).toLocaleString();
 const shelf = () => state[state.mode];
@@ -140,15 +141,47 @@ function journal() {
   const events = [...shelf().events].reverse();
   return `<div class="eyebrow">Routine history</div><div class="intro"><h1>Your journal</h1></div><div class="card">${events.length?events.map(e=>`<div class="history"><div><small>${e.day} · ${e.slot}</small><h3>${catalog[e.id].name}</h3></div><div>${e.status}<br><small>${e.status==='Skipped'?'No deduction':e.calibrated?fmt(e.used)+' mL estimated':'Quantity unmeasured'}</small></div></div>`).join(''):'<h2>No check-ins yet.</h2><p>Log or skip a scheduled use on Today. Each entry will appear here.</p><a href="#today">Go to today →</a>'}</div>`;
 }
+function updateDiscoveryStep() {
+  const form=document.querySelector('#discovery-form');
+  if(!form) return;
+  const steps=[...form.querySelectorAll('[data-quiz-step]')];
+  steps.forEach((step,i)=>step.hidden=i!==discoveryStep);
+  const count=document.querySelector('#quiz-count'), fill=document.querySelector('#quiz-fill');
+  if(count) count.textContent='Step '+(discoveryStep+1)+' of '+steps.length;
+  if(fill) fill.style.width=((discoveryStep+1)/steps.length*100)+'%';
+  const back=form.querySelector('[data-action="discovery-back"]');
+  const next=form.querySelector('[data-action="discovery-next"]');
+  const submit=form.querySelector('#discovery-submit');
+  if(back) back.hidden=discoveryStep===0;
+  if(next) next.hidden=discoveryStep===steps.length-1;
+  if(submit) submit.hidden=discoveryStep!==steps.length-1;
+}
+function estimateMarkup(p) {
+  if(!p.sizeMl || p.estimate===false) return '<p class="estimate-note">A month estimate is not shown here because the amount per swipe/application is difficult to measure reliably. Follow the pack directions.</p>';
+  const ml=p.amount||1, uses=p.uses||7, months=p.sizeMl/(ml*uses)/4.345;
+  return '<div class="usage-estimator"><strong>How long could this bottle last?</strong><div class="estimate-fields"><label>mL per use<input type="number" min="0.1" max="100" step="0.1" value="'+ml+'" data-estimate-id="'+p.id+'" data-estimate-ml></label><label>Uses per week<input type="number" min="0.1" max="70" step="0.5" value="'+uses+'" data-estimate-id="'+p.id+'" data-estimate-frequency></label></div><p id="estimate-'+p.id+'" class="estimate-result">At these example settings: about '+months.toFixed(1)+' months.</p><small>Estimate only: '+p.sizeMl+' mL ÷ (mL per use × uses per week). Actual use varies by body area, coverage and dispensing. Do not reduce the amount you use just to make a product last longer.</small></div>';
+}
+function discoveryProductCard(p,index) {
+  return '<article class="match-card" data-size="'+(p.sizeMl||'')+'"><div class="match-card-top"><span class="product-category">'+p.category+'</span><span class="match-number">Match '+(index+1)+'</span></div><div class="product-visual"><span>'+p.name.split(' ').slice(0,2).map(x=>x[0]).join('').toUpperCase()+'</span><small>'+p.category+'</small></div><div class="product-size">'+(p.sizeMl?p.sizeMl+' mL':p.sizeG?p.sizeG+' g':'Pack')+'</div><h3>'+p.name+'</h3><p>'+p.reason+'</p><p class="skin-note">'+p.skinNote+'</p>'+estimateMarkup(p)+'<a class="primary btn product-link" href="'+p.source+'" target="_blank" rel="noopener noreferrer">View on Be Bodywise ↗</a></article>';
+}
 function discoverPage() {
-  return '<div class="eyebrow">Product discovery</div><div class="intro"><h1>Find a product to explore</h1></div>' +
-    '<p class="muted">Answer two quick questions for a transparent suggestion from the two Be Bodywise body-care products documented in this prototype. This is not a diagnosis or a substitute for the product label.</p>' +
-    '<div class="discovery-layout"><form id="discovery-form" class="discovery-form">' +
-    '<label>What would you most like help with?<select name="concern" required><option value="">Choose a concern</option><option value="dryness">Dry or rough-feeling body skin</option><option value="texture">Rough or uneven-feeling body texture</option><option value="blemishes">Body blemishes or clogged-feeling pores</option><option value="unsure">I’m not sure / something else</option></select></label>' +
-    '<label>Do you already own either of these products?<select name="owned"><option value="none">Neither</option><option value="lotion">5% Lactic Acid Body Lotion</option><option value="wash">1% Salicylic Acid Body Wash</option><option value="both">Both</option></select></label>' +
-    '<button class="primary" type="submit">Show my suggestion</button></form>' +
-    '<section id="recommendation-result" class="recommendation" aria-live="polite"><div class="slot">A clear, limited catalogue</div><h2>Your suggestion will appear here</h2><p>We’ll explain why a product may fit the concern you selected—and when the app cannot make a responsible suggestion.</p></section></div>' +
-    '<p class="wellness-note">Only two products are currently included. Check the ingredients and directions on your own pack; formulations and suitability can vary. Stop use if irritation occurs.</p>';
+  discoveryStep=0;
+  const productChecks=Discovery.products.map(p=>'<label class="quiz-choice compact"><input type="checkbox" name="owned" value="'+p.id+'"><span>'+p.name+'</span></label>').join('');
+  return '<div class="eyebrow">Your personal product finder</div><div class="intro"><h1>Let’s find what fits your routine.</h1><p class="muted">A few quick taps. You stay in control.</p></div>' +
+    '<p class="quiz-intro">I’ll ask about your skin, your concerns and what you already own. Then I’ll show a small, relevant shortlist—not a shopping list.</p>' +
+    '<div class="discovery-layout"><form id="discovery-form" class="discovery-form"><div class="quiz-progress"><span id="quiz-count">Step 1 of 5</span><div class="meter"><i id="quiz-fill" style="width:20%"></i></div></div>' +
+    '<fieldset data-quiz-step="0"><legend>1. What area would you like help with?</legend><p class="hint">Choose the area you want to focus on first.</p><div class="quiz-options">' +
+    [['face','Face'],['body','Body'],['underarms','Underarms'],['feet','Feet'],['multiple','More than one area']].map(([v,l])=>'<label class="quiz-choice"><input type="radio" name="area" value="'+v+'"><span>'+l+'</span></label>').join('')+'</div></fieldset>' +
+    '<fieldset data-quiz-step="1" hidden><legend>2. How would you describe your skin?</legend><p class="hint">If you are unsure, that is completely fine.</p><div class="quiz-options">' +
+    [['oily','Oily'],['dry','Dry'],['combination','Combination'],['normal','Normal'],['sensitive','Sensitive'],['unsure','Not sure']].map(([v,l])=>'<label class="quiz-choice"><input type="radio" name="skinType" value="'+v+'"><span>'+l+'</span></label>').join('')+'</div></fieldset>' +
+    '<fieldset data-quiz-step="2"><legend>3. What would you like to work on?</legend><p class="hint">Select all that apply. We’ll use these concerns to find relevant products.</p><div class="quiz-options">' +
+    [['acne','Occasional face acne'],['blackheads','Blackheads / clogged pores'],['dryness','Dry body skin'],['flaky','Very dry or flaky skin'],['hydration','Hydration'],['barrier','Skin barrier care'],['sun','Sun protection'],['body-acne','Body acne'],['bumps','Body bumps'],['dullness','Dull-looking skin'],['marks','Acne marks'],['odour','Underarm odour'],['underarm-pigmentation','Underarm pigmentation'],['heels','Cracked or rough heels'],['strawberry','Strawberry skin'],['rough','Rough body texture'],['pigmentation','Body pigmentation']].map(([v,l])=>'<label class="quiz-choice"><input type="checkbox" name="concerns" value="'+v+'"><span>'+l+'</span></label>').join('')+'</div></fieldset>' +
+    '<fieldset data-quiz-step="3" hidden><legend>4. Does your skin react easily to products?</legend><p class="hint">This helps us avoid suggesting exfoliating actives when you may need a gentler approach.</p><div class="quiz-options">' +
+    [['no','Usually no'],['reactive','Yes, it gets irritated easily'],['current','It is irritated right now'],['unsure','I’m not sure']].map(([v,l])=>'<label class="quiz-choice"><input type="radio" name="sensitivity" value="'+v+'"><span>'+l+'</span></label>').join('')+'</div></fieldset>' +
+    '<fieldset data-quiz-step="4" hidden><legend>5. Do you already own any of these?</legend><p class="hint">Tick what you have. We’ll avoid recommending a duplicate.</p><div class="owned-checks">'+productChecks+'</div><label class="quiz-choice"><input type="checkbox" name="owned" value="__other"><span>I already have another product / I’m not sure</span></label></fieldset>' +
+    '<div class="quiz-actions"><button type="button" data-action="discovery-back" hidden>← Back</button><button type="button" class="primary" data-action="discovery-next">Continue →</button><button type="submit" id="discovery-submit" class="primary" hidden>Show my matches →</button></div></form>' +
+    '<section id="recommendation-result" class="recommendation" aria-live="polite"><div class="result-empty"><div class="result-orb">✦</div><span class="slot">Your results will appear here</span><h2>Let’s get to know your skin.</h2><p>Once you finish the questions, I’ll explain why each suggested product may match your selected concern.</p></div></section></div>' +
+    '<p class="wellness-note">This is an educational product-discovery tool, not a diagnosis or medical advice. Product fit depends on your own skin and the current pack label. Patch test new products and stop if irritation occurs. If your skin is currently irritated or a concern is persistent, consider professional advice.</p>';
 }
 function wellnessPage() {
   const keyToday=dateKey(), tip=Wellness.dailyTip(keyToday), quote=Wellness.dailyQuote(keyToday);
@@ -181,6 +214,7 @@ function render() {
   }
   main.innerHTML = (storageWarning?`<p role="alert" class="notice">${storageWarning}</p>`:'')+({today,shelf:shelfPage,journal,compare:comparisonPage,ingredients:ingredientPage,discover:discoverPage,wellness:wellnessPage,loyalty:loyaltyPage}[view]());
   mountViewer();
+  if(view==='discover') updateDiscoveryStep();
   document.title = 'Bodywise Companion · '+({today:'Today',shelf:'My shelf',journal:'Journal',compare:'Compare bottles',ingredients:'Ingredients',discover:'Discover',wellness:'Wellness',loyalty:'Rewards'}[view]);
 }
 function settings(id, targetMode=state.mode, fromOwnerPath=false) {
@@ -212,15 +246,18 @@ document.addEventListener('submit',e=>{
   if(e.target.id!=='discovery-form') return;
   e.preventDefault();
   const data=new FormData(e.target);
-  const result=Discovery.recommend({concern:data.get('concern'),owned:data.get('owned')});
+  const result=Discovery.recommend({area:data.get('area'),skinType:data.get('skinType'),concerns:data.getAll('concerns'),sensitivity:data.get('sensitivity'),owned:data.getAll('owned')});
   const target=document.querySelector('#recommendation-result');
   if(result.status==='no-match') {
-    target.innerHTML='<div class="slot">No responsible match</div><h2>Let’s not guess</h2><p>'+result.message+'</p>';
+    target.innerHTML='<div class="result-empty"><div class="slot">No clear match yet</div><h2>Let’s not guess.</h2><p>'+result.message+'</p><a href="https://bebodywise.com/shop/all" target="_blank" rel="noopener noreferrer">Browse the full Be Bodywise catalogue ↗</a></div>';
     return;
   }
-  const p=catalog[result.id];
-  const heading=result.status==='already-owned'?'You already have a useful next step':'A product to explore';
-  target.innerHTML='<div class="catalog-photo">'+packshot(result.id)+'</div><div class="slot">'+p.type+' · '+p.size+' mL</div><h2>'+heading+'</h2><h3>'+p.name+'</h3><p>'+result.reason+'</p><p>'+(result.next||result.message)+'</p><div class="actions"><a class="primary btn" href="#ingredients/'+result.id+'">Explore ingredients</a>'+button('guide','Read product guide',idAttr(result.id),'linkbtn')+'</div>';
+  if(result.status==='already-owned') {
+    target.innerHTML='<div class="result-empty"><div class="slot">No need to repurchase</div><h2>You may already have what you need.</h2><p>'+result.message+'</p><ul>'+result.ownedMatches.map(p=>'<li>'+p.name+'</li>').join('')+'</ul></div>';
+    return;
+  }
+  target.innerHTML='<div class="results-heading"><div class="slot">Your personalised shortlist</div><h2>Here are a few options to explore.</h2><p>These match the areas and concerns you selected. Start with one product rather than adding everything at once.</p></div><div class="match-grid">'+result.results.map(discoveryProductCard).join('')+'</div><p class="wellness-note">You can change your answers and try again. A match is not a guarantee of results or suitability. Follow each product label and introduce active products cautiously.</p>';
+  target.scrollIntoView({behavior:'smooth',block:'start'});
 });
 document.addEventListener('submit',e=>{
   if(e.target.id!=='settings') return;
@@ -244,12 +281,32 @@ document.addEventListener('submit',e=>{
   if (form.dataset.ownerPath==='true' && page()!=='today') location.hash='today';
   save('Bottle saved.');
 });
-document.addEventListener('input',e=>{if(e.target.name==='remaining') e.target.dataset.edited='yes';});
+document.addEventListener('input',e=>{
+  if(e.target.name==='remaining') e.target.dataset.edited='yes';
+  if(e.target.matches('[data-estimate-ml],[data-estimate-frequency]')) {
+    const id=e.target.dataset.estimateId;
+    const form=e.target.closest('.match-card');
+    const ml=Number(form.querySelector('[data-estimate-ml]').value);
+    const uses=Number(form.querySelector('[data-estimate-frequency]').value);
+    const size=Number(form.dataset.size);
+    const output=form.querySelector('.estimate-result');
+    if(ml>0&&uses>0&&Number.isFinite(size)) output.textContent='At these settings: about '+(size/(ml*uses)/4.345).toFixed(1)+' months.';
+    else output.textContent='Enter amounts greater than zero to calculate an estimate.';
+  }
+});
 document.addEventListener('change',e=>{if(e.target.id==='featured'){selected=e.target.value;render();}});
 document.addEventListener('click',e=>{
   const el=e.target.closest('button');
   if(!el) return;
   const act=el.dataset.action, id=el.dataset.id, slot=el.dataset.slot, b=shelf().bottles[id];
+  if(act==='discovery-next'||act==='discovery-back') {
+    const form=document.querySelector('#discovery-form');
+    if(act==='discovery-back'){discoveryStep=Math.max(0,discoveryStep-1);updateDiscoveryStep();return;}
+    const active=form.querySelector('[data-quiz-step="'+discoveryStep+'"]');
+    const hasAnswer=active.querySelector('input:checked');
+    if(!hasAnswer){say(discoveryStep===2?'Select at least one concern to continue.':'Choose an option to continue.');return;}
+    discoveryStep=Math.min(4,discoveryStep+1);updateDiscoveryStep();return;
+  }
   if(el.id==='mode') {
     const example = state.mode==='example';
     modal('Choose your shelf',`<div class="dialog-copy"><p>${example?'You’re exploring an example bottle. Its amounts and schedule are illustrative.':'Your personal shelf holds the products and schedule you entered.'}</p><p class="muted">Each shelf is saved separately in this browser. Clearing browser data removes your records.</p>${button('switch',example?'Start or open my personal shelf':'Explore the example shelf','','primary')}</div>`);
