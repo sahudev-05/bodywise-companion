@@ -70,6 +70,7 @@
     if (note) note.textContent = 'Your entries stay in this browser on this device and are not sent to Be Bodywise. Your reflections are self-reported, not medical advice or a clinical product assessment. Follow the directions on your own pack.';
     document.title = 'Bodywise Companion · Expectation Match';
   }
+  if (!location.hash) location.hash = '#experience';
   const main = document.querySelector('main');
   if (main) new MutationObserver(() => enhance()).observe(main, {childList:true,subtree:true});
   window.addEventListener('hashchange', () => requestAnimationFrame(enhance));
