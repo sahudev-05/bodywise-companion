@@ -4,7 +4,7 @@
 
 ## First visit
 
-The **Discover** page offers a transparent, rule-based suggestion from the two products currently documented in this prototype. It explains the match and deliberately declines to recommend when the selected concern is outside that small catalogue. It is educational guidance, not a diagnosis or personalised medical advice. The **Wellness** page rotates a date-stable wellbeing tip and an original daily thought. Both are optional supporting experiences.
+The **Discover** page offers a transparent, rule-based suggestion from the two products currently documented in this prototype. It explains the match and deliberately declines to recommend when the selected concern is outside that small catalogue. It is educational guidance, not a diagnosis or personalised medical advice. The **Wellness** page rotates a date-stable wellbeing tip and an original daily thought. Both are optional supporting experiences. The **Rewards** page demonstrates a low-pressure loyalty layer: points are earned for reading product guidance, sharing feedback and confirming responsible empty-pack disposal—not for increasing usage or buying unnecessarily. Points are local-only and not redeemable. Real purchase-linked rewards require a brand-authorised commerce integration and order verification.
 
 **Help me choose** opens a side-by-side comparison of the two bottles, including their purpose, shower step, rinse-off or leave-on directions and brand sources. **I own this already** opens a pack picker and creates or edits the chosen bottle on the personal shelf when saved.
 
@@ -40,7 +40,7 @@ The repository root is a static website. Serve it over HTTP or HTTPS for the int
 
 The 3D viewer is Google's [model-viewer](https://github.com/google/model-viewer), version 4.4.0. Its distribution is in viewer.min.js with its license in VIEWER-LICENSE.txt. Formula data and product-specific roles are in formula.js. Routine logic and calculation tests are in model.js and model.test.cjs.
 
-Run the calculation and discovery tests with Node's built-in runner: `node --test *.test.cjs`. Browser checks cover rotation on both models, touch dragging, reset, formula counts and filtering, persisted check-ins, and the responsive views.
+Run the calculation, discovery and loyalty tests with Node's built-in runner: `node --test *.test.cjs`. Browser checks cover rotation on both models, touch dragging, reset, formula counts and filtering, persisted check-ins, and the responsive views.
 
 ## Fellowship evidence
 
