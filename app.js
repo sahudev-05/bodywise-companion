@@ -31,7 +31,7 @@ let toastTimer;
 const fmt = n => Number(n.toFixed(2)).toLocaleString();
 const shelf = () => state[state.mode];
 const bottles = () => Object.values(shelf().bottles);
-const page = () => { const route=location.hash.split('/')[0].slice(1); return ['today','shelf','journal','compare','discover','wellness'].includes(route)?route:route==='ingredients'?'ingredients':'today'; };
+const page = () => { const route=location.hash.split('/')[0].slice(1); return ['today','shelf','journal','compare','discover','wellness','loyalty'].includes(route)?route:route==='ingredients'?'ingredients':'today'; };
 const button = (action,label,attrs='',cl='') => `<button class="${cl}" data-action="${action}" ${attrs}>${label}</button>`;
 const idAttr = id => `data-id="${id}"`;
 const guideBtn = id => button('guide','Read product guide ↗',idAttr(id),'linkbtn');
@@ -161,6 +161,16 @@ function wellnessPage() {
     '<section class="wellness-card" style="margin-top:16px"><div class="slot">A gentle reminder</div><h2>Consistency without pressure</h2><p>Follow product directions, be patient with routines and give yourself permission to keep things simple. You do not need a perfect routine to take care of yourself.</p></section>';
 }
 
+function loyaltyPage() {
+  const s=Loyalty.status();
+  const activities=Object.entries(s.activities);
+  return '<div class="eyebrow">Your relationship with Bodywise</div><div class="intro"><h1>Care that comes full circle</h1></div>' +
+    '<p class="muted">Collect Care Points for useful product education, sharing feedback and responsible empty-pack disposal—not for using more product than you need.</p>' +
+    '<section class="loyalty-summary"><div><div class="slot">Your Care Points</div><strong class="loyalty-points">'+s.points+'</strong><p>'+s.tier+'</p></div><div class="loyalty-progress"><div class="spread"><span>Next milestone</span><strong>'+s.next+' points</strong></div><div class="meter" style="--fill:'+Math.min(100,s.points/s.next*100)+'%"><i></i></div><small>'+Math.max(0,s.next-s.points)+' points to go</small></div></section>' +
+    '<section class="loyalty-card"><div class="section-title"><h2>Earn points through helpful actions</h2></div>'+activities.map(([id,item])=>'<div class="loyalty-activity"><div><strong>'+item.label+'</strong><small>+'+item.points+' Care Points</small></div>'+ (s.completed.includes(id)?'<span class="success">Completed ✓</span>':button('loyalty-claim','Complete', 'data-activity="'+id+'"','primary'))+'</div>').join('')+'</section>' +
+    '<section class="loyalty-card"><div class="section-title"><h2>Replenishment, on your terms</h2></div><p>When your bottle estimate is running low, check your remaining quantity and decide whether the product is still right for you. You can reorder when you genuinely need it—there is no pressure to buy on a schedule.</p><p class="wellness-note">Purchase-linked points, coupons and order verification need an official Be Bodywise commerce/loyalty integration. This prototype does not issue discounts or verify purchases.</p></section>' +
+    '<p class="wellness-note">Points are stored only in this browser and are a demonstration of the loyalty experience, not redeemable brand rewards.</p>';
+}
 function render() {
   const view = page();
   const modeButton = document.querySelector('#mode');
@@ -169,9 +179,9 @@ function render() {
   for (const a of document.querySelectorAll('nav a')) {
     if(a.hash.split('/')[0]==='#'+view) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current');
   }
-  main.innerHTML = (storageWarning?`<p role="alert" class="notice">${storageWarning}</p>`:'')+({today,shelf:shelfPage,journal,compare:comparisonPage,ingredients:ingredientPage,discover:discoverPage,wellness:wellnessPage}[view]());
+  main.innerHTML = (storageWarning?`<p role="alert" class="notice">${storageWarning}</p>`:'')+({today,shelf:shelfPage,journal,compare:comparisonPage,ingredients:ingredientPage,discover:discoverPage,wellness:wellnessPage,loyalty:loyaltyPage}[view]());
   mountViewer();
-  document.title = 'Bodywise Companion · '+({today:'Today',shelf:'My shelf',journal:'Journal',compare:'Compare bottles',ingredients:'Ingredients',discover:'Discover',wellness:'Wellness'}[view]);
+  document.title = 'Bodywise Companion · '+({today:'Today',shelf:'My shelf',journal:'Journal',compare:'Compare bottles',ingredients:'Ingredients',discover:'Discover',wellness:'Wellness',loyalty:'Rewards'}[view]);
 }
 function settings(id, targetMode=state.mode, fromOwnerPath=false) {
   const savedBottle = state[targetMode].bottles[id];
@@ -235,6 +245,7 @@ document.addEventListener('click',e=>{
     modal('Choose your shelf',`<div class="dialog-copy"><p>${example?'You’re exploring an example bottle. Its amounts and schedule are illustrative.':'Your personal shelf holds the products and schedule you entered.'}</p><p class="muted">Each shelf is saved separately in this browser. Clearing browser data removes your records.</p>${button('switch',example?'Start or open my personal shelf':'Explore the example shelf','','primary')}</div>`);
   }
   if(act==='pick-owned') chooseOwned();
+  if(act==='loyalty-claim'){const result=Loyalty.claim(el.dataset.activity);if(result.ok){say('You earned '+result.earned+' Care Points.');render();}else say(result.storageError?'Could not save points on this device.':'This activity is already completed.');}
   if(act==='save-quote'){try{localStorage.setItem('bodywise-saved-quote',Wellness.dailyQuote(dateKey()));say('Thought saved on this device.');render();}catch{say('Could not save on this device.');}}
   if(act==='setup-owned') settings(id,'personal',true);
   if(act==='feature'){selected=id;render();}
