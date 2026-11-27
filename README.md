@@ -44,4 +44,4 @@ Run the calculation and discovery tests with Node's built-in runner: `node --tes
 
 ## Fellowship evidence
 
-The consumer problem is a working hypothesis. Five genuine, consented customer interviews and observed usability sessions are still needed before claiming validation. No customer identities or interview findings are included. Codex assisted with implementation and automated testing.
+The project owner reports completing five Joinify customer interviews and formulating a final problem statement. The interview synthesis and exact final statement have not yet been added to this repository, so this README does not claim a specific validated finding. Add an anonymised evidence summary and connect each major feature to the final problem statement before submission. Observed usability testing should be documented separately. No customer identities should be committed.
