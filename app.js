@@ -31,7 +31,7 @@ let toastTimer;
 const fmt = n => Number(n.toFixed(2)).toLocaleString();
 const shelf = () => state[state.mode];
 const bottles = () => Object.values(shelf().bottles);
-const page = () => location.hash.split('/')[0]==='#ingredients' ? 'ingredients' : ['today','shelf','journal','compare'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'today';
+const page = () => { const route=location.hash.split('/')[0].slice(1); return ['today','shelf','journal','compare','discover','wellness'].includes(route)?route:route==='ingredients'?'ingredients':'today'; };
 const button = (action,label,attrs='',cl='') => `<button class="${cl}" data-action="${action}" ${attrs}>${label}</button>`;
 const idAttr = id => `data-id="${id}"`;
 const guideBtn = id => button('guide','Read product guide ↗',idAttr(id),'linkbtn');
@@ -140,6 +140,27 @@ function journal() {
   const events = [...shelf().events].reverse();
   return `<div class="eyebrow">Routine history</div><div class="intro"><h1>Your journal</h1></div><div class="card">${events.length?events.map(e=>`<div class="history"><div><small>${e.day} · ${e.slot}</small><h3>${catalog[e.id].name}</h3></div><div>${e.status}<br><small>${e.status==='Skipped'?'No deduction':e.calibrated?fmt(e.used)+' mL estimated':'Quantity unmeasured'}</small></div></div>`).join(''):'<h2>No check-ins yet.</h2><p>Log or skip a scheduled use on Today. Each entry will appear here.</p><a href="#today">Go to today →</a>'}</div>`;
 }
+function discoverPage() {
+  return '<div class="eyebrow">Product discovery</div><div class="intro"><h1>Find a product to explore</h1></div>' +
+    '<p class="muted">Answer two quick questions for a transparent suggestion from the two Be Bodywise body-care products documented in this prototype. This is not a diagnosis or a substitute for the product label.</p>' +
+    '<div class="discovery-layout"><form id="discovery-form" class="discovery-form">' +
+    '<label>What would you most like help with?<select name="concern" required><option value="">Choose a concern</option><option value="dryness">Dry or rough-feeling body skin</option><option value="texture">Rough or uneven-feeling body texture</option><option value="blemishes">Body blemishes or clogged-feeling pores</option><option value="unsure">I’m not sure / something else</option></select></label>' +
+    '<label>Do you already own either of these products?<select name="owned"><option value="none">Neither</option><option value="lotion">5% Lactic Acid Body Lotion</option><option value="wash">1% Salicylic Acid Body Wash</option><option value="both">Both</option></select></label>' +
+    '<button class="primary" type="submit">Show my suggestion</button></form>' +
+    '<section id="recommendation-result" class="recommendation" aria-live="polite"><div class="slot">A clear, limited catalogue</div><h2>Your suggestion will appear here</h2><p>We’ll explain why a product may fit the concern you selected—and when the app cannot make a responsible suggestion.</p></section></div>' +
+    '<p class="wellness-note">Only two products are currently included. Check the ingredients and directions on your own pack; formulations and suitability can vary. Stop use if irritation occurs.</p>';
+}
+function wellnessPage() {
+  const keyToday=dateKey(), tip=Wellness.dailyTip(keyToday), quote=Wellness.dailyQuote(keyToday);
+  let saved=''; try { saved=localStorage.getItem('bodywise-saved-quote')||''; } catch {}
+  const isSaved=saved===quote;
+  return '<div class="eyebrow">Everyday wellbeing</div><div class="intro"><h1>A little care, every day</h1></div>' +
+    '<p class="muted">Small, realistic ideas to support general wellbeing. These are optional reminders, not medical advice or promises about skin outcomes.</p>' +
+    '<div class="wellness-grid"><section class="wellness-card"><div class="slot">Wellness tip of the day · '+tip.category+'</div><h2>'+tip.title+'</h2><p>'+tip.body+'</p><p class="wellness-note">Choose what works for your circumstances. If you have a medical condition, special diet or fluid restriction, follow advice from your healthcare professional.</p></section>' +
+    '<section class="quote-card"><div class="slot">A thought for today</div><blockquote>“'+quote+'”</blockquote><p class="wellness-note">An original line from Bodywise Companion.</p>'+button('save-quote',isSaved?'Saved for today ✓':'Save today’s thought','','primary')+'</section></div>' +
+    '<section class="wellness-card" style="margin-top:16px"><div class="slot">A gentle reminder</div><h2>Consistency without pressure</h2><p>Follow product directions, be patient with routines and give yourself permission to keep things simple. You do not need a perfect routine to take care of yourself.</p></section>';
+}
+
 function render() {
   const view = page();
   const modeButton = document.querySelector('#mode');
@@ -148,9 +169,9 @@ function render() {
   for (const a of document.querySelectorAll('nav a')) {
     if(a.hash.split('/')[0]==='#'+view) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current');
   }
-  main.innerHTML = (storageWarning?`<p role="alert" class="notice">${storageWarning}</p>`:'')+({today,shelf:shelfPage,journal,compare:comparisonPage,ingredients:ingredientPage}[view]());
+  main.innerHTML = (storageWarning?`<p role="alert" class="notice">${storageWarning}</p>`:'')+({today,shelf:shelfPage,journal,compare:comparisonPage,ingredients:ingredientPage,discover:discoverPage,wellness:wellnessPage}[view]());
   mountViewer();
-  document.title = 'Bodywise Companion · '+({today:'Today',shelf:'My shelf',journal:'Journal',compare:'Compare bottles',ingredients:'Ingredients'}[view]);
+  document.title = 'Bodywise Companion · '+({today:'Today',shelf:'My shelf',journal:'Journal',compare:'Compare bottles',ingredients:'Ingredients',discover:'Discover',wellness:'Wellness'}[view]);
 }
 function settings(id, targetMode=state.mode, fromOwnerPath=false) {
   const savedBottle = state[targetMode].bottles[id];
@@ -167,6 +188,20 @@ function settings(id, targetMode=state.mode, fromOwnerPath=false) {
     <fieldset><legend>Usual time</legend><div class="choices">${checks('slots',['Morning','Evening'].map(s=>[s,s]),b.slots)}</div></fieldset>
     <p class="notice" role="alert" id="error"></p><div class="actions"><button class="primary" type="submit">Save bottle</button></div></form>`);
 }
+document.addEventListener('submit',e=>{
+  if(e.target.id!=='discovery-form') return;
+  e.preventDefault();
+  const data=new FormData(e.target);
+  const result=Discovery.recommend({concern:data.get('concern'),owned:data.get('owned')});
+  const target=document.querySelector('#recommendation-result');
+  if(result.status==='no-match') {
+    target.innerHTML='<div class="slot">No responsible match</div><h2>Let’s not guess</h2><p>'+result.message+'</p>';
+    return;
+  }
+  const p=catalog[result.id];
+  const heading=result.status==='already-owned'?'You already have a useful next step':'A product to explore';
+  target.innerHTML='<div class="catalog-photo">'+packshot(result.id)+'</div><div class="slot">'+p.type+' · '+p.size+' mL</div><h2>'+heading+'</h2><h3>'+p.name+'</h3><p>'+result.reason+'</p><p>'+(result.next||result.message)+'</p><div class="actions"><a class="primary btn" href="#ingredients/'+result.id+'">Explore ingredients</a>'+button('guide','Read product guide',idAttr(result.id),'linkbtn')+'</div>';
+});
 document.addEventListener('submit',e=>{
   if(e.target.id!=='settings') return;
   e.preventDefault();
@@ -200,6 +235,7 @@ document.addEventListener('click',e=>{
     modal('Choose your shelf',`<div class="dialog-copy"><p>${example?'You’re exploring an example bottle. Its amounts and schedule are illustrative.':'Your personal shelf holds the products and schedule you entered.'}</p><p class="muted">Each shelf is saved separately in this browser. Clearing browser data removes your records.</p>${button('switch',example?'Start or open my personal shelf':'Explore the example shelf','','primary')}</div>`);
   }
   if(act==='pick-owned') chooseOwned();
+  if(act==='save-quote'){try{localStorage.setItem('bodywise-saved-quote',Wellness.dailyQuote(dateKey()));say('Thought saved on this device.');render();}catch{say('Could not save on this device.');}}
   if(act==='setup-owned') settings(id,'personal',true);
   if(act==='feature'){selected=id;render();}
   if(act==='formula'){location.hash='ingredients/'+id;}
