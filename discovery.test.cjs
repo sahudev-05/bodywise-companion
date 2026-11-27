@@ -27,8 +27,8 @@ test('sensitive or unsure skin does not receive exfoliating active suggestions',
 });
 test('already-owned matching products are filtered out',()=>{
   const r=recommend({area:'body',skinType:'dry',concerns:['dryness'],sensitivity:'no',owned:['body-urea-lotion']});
+  assert.equal(r.status,'already-owned');
   assert.equal(r.results.length,0);
-  assert.equal(r.status,'no-match');
 });
 test('unmatched concerns do not force an irrelevant recommendation',()=>{
   assert.equal(recommend({area:'face',skinType:'unsure',concerns:['heels'],sensitivity:'no'}).status,'no-match');
