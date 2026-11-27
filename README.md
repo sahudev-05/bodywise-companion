@@ -44,4 +44,4 @@ Run the calculation, discovery and loyalty tests with Node's built-in runner: `n
 
 ## Fellowship evidence
 
-The project owner reports completing customer interviews using Joinify and formulating a final problem statement. The interview synthesis and exact final statement have not yet been added to this repository, so this README does not claim a specific validated finding. Add an anonymised evidence summary and connect each major feature to the final problem statement before submission. Observed usability testing should be documented separately. No customer identities should be committed.
+The project owner reports completing customer interviews using Joinify and formulating a final problem statement. See `CUSTOMER-RESEARCH.md` for the owner's supplied overall pattern, final problem statement and HMW statement. The reported repeat-purchase observation is treated as a retention hypothesis to validate, not proof that every customer wants loyalty rewards. Observed usability testing should be documented separately. No customer identities should be committed.
