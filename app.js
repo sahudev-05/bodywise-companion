@@ -31,7 +31,7 @@ let toastTimer;
 const fmt = n => Number(n.toFixed(2)).toLocaleString();
 const shelf = () => state[state.mode];
 const bottles = () => Object.values(shelf().bottles);
-const page = () => location.hash.split('/')[0]==='#ingredients' ? 'ingredients' : ['today','shelf','journal','compare'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'today';
+const page = () => location.hash.split('/')[0]==='#ingredients' ? 'ingredients' : ['today','shelf','journal','compare','discover'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'today';
 const button = (action,label,attrs='',cl='') => `<button class="${cl}" data-action="${action}" ${attrs}>${label}</button>`;
 const idAttr = id => `data-id="${id}"`;
 const guideBtn = id => button('guide','Read product guide ↗',idAttr(id),'linkbtn');
@@ -122,7 +122,7 @@ function comparisonPage() {
 function today() {
   const id = selected || bottles()[0]?.id || 'lotion';
   return `<div class="eyebrow">${new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'})}</div>
-    <div class="intro"><h1>Your routine</h1>${productTabs(id,'feature')}</div>${startingPaths()}${hero(id)}
+    <div class="intro"><h1>Your routine</h1>${productTabs(id,'feature')}</div>${startingPaths()}${hero(id)}${wellnessPanel()}
     <div class="below"><section><div class="section-title"><h2>Today’s check-in</h2></div>${routine()}</section>
     <section><div class="section-title"><h2>Key ingredients</h2><a href="#ingredients/${id}">Full formula →</a></div>
     ${activeCards(id)}</section></div>`;
@@ -148,9 +148,9 @@ function render() {
   for (const a of document.querySelectorAll('nav a')) {
     if(a.hash.split('/')[0]==='#'+view) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current');
   }
-  main.innerHTML = (storageWarning?`<p role="alert" class="notice">${storageWarning}</p>`:'')+({today,shelf:shelfPage,journal,compare:comparisonPage,ingredients:ingredientPage}[view]());
+  main.innerHTML = (storageWarning?`<p role="alert" class="notice">${storageWarning}</p>`:'')+({today,shelf:shelfPage,journal,compare:comparisonPage,discover:discoverPage,ingredients:ingredientPage}[view]());
   mountViewer();
-  document.title = 'Bodywise Companion · '+({today:'Today',shelf:'My shelf',journal:'Journal',compare:'Compare bottles',ingredients:'Ingredients'}[view]);
+  document.title = 'Bodywise Companion · '+({today:'Today',shelf:'My shelf',journal:'Journal',compare:'Compare bottles',discover:'Suggest me',ingredients:'Ingredients'}[view]);
 }
 function settings(id, targetMode=state.mode, fromOwnerPath=false) {
   const savedBottle = state[targetMode].bottles[id];

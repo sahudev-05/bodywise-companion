@@ -40,6 +40,14 @@ The 3D viewer is Google's [model-viewer](https://github.com/google/model-viewer)
 
 Run the six calculation tests with Node's built-in runner: `node --test model.test.cjs`. Browser checks cover rotation on both models, touch dragging, reset, formula counts and filtering, persisted check-ins, and the responsive views.
 
+## Guided product discovery and wellbeing
+
+**Suggest me a product** is a separate, rule-based discovery flow (not a diagnosis or AI skin assessment). It asks about the user's goal and optional sensitivity/existing-acid-use considerations, then explains why one or both products appear relevant, with ingredient and label cautions. It only recommends from the two documented products in this prototype; it does not invent products or promise outcomes.
+
+The Today page also includes rotating general wellbeing ideas and original daily reminders. Tips cover hydration, balanced eating, sleep, enjoyable movement, sun protection and gradual product introduction. They are not treatment advice and do not claim that a food or habit guarantees clear or glowing skin.
+
 ## Fellowship evidence
 
-The consumer problem is a working hypothesis. Five genuine, consented customer interviews and observed usability sessions are still needed before claiming validation. No customer identities or interview findings are included. Codex assisted with implementation and automated testing.
+Update this section with the actual interview count, consent approach, recurring patterns and final problem statement once the completed Joinify interview synthesis is added to the project. Do not present illustrative examples or an unshared hypothesis as validated customer evidence. Observed usability sessions should be recorded separately from interviews. No customer identities should be committed to this public repository.
+
+Codex assisted with implementation and automated testing.
