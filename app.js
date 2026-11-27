@@ -147,6 +147,15 @@ function updateDiscoveryStep() {
   const steps=[...form.querySelectorAll('[data-quiz-step]')];
   steps.forEach((step,i)=>step.hidden=i!==discoveryStep);
   const count=document.querySelector('#quiz-count'), fill=document.querySelector('#quiz-fill');
+  const prompts=[
+    'Let’s start with the area you want to care for. What would you like help with?',
+    'Thanks! Now, how would you describe your skin most of the time?',
+    'Got it. What would you most like to improve? You can choose more than one.',
+    'One more thing before I suggest anything: does your skin react easily?',
+    'Last question: which of these products do you already have? I’ll avoid suggesting duplicates.'
+  ];
+  const prompt=document.querySelector('#assistant-question');
+  if(prompt) prompt.textContent=prompts[discoveryStep];
   if(count) count.textContent='Step '+(discoveryStep+1)+' of '+steps.length;
   if(fill) fill.style.width=((discoveryStep+1)/steps.length*100)+'%';
   const back=form.querySelector('[data-action="discovery-back"]');
@@ -178,7 +187,7 @@ function discoverPage() {
     '<fieldset data-quiz-step="3" hidden><legend>4. Does your skin react easily to products?</legend><p class="hint">This helps us avoid suggesting exfoliating actives when you may need a gentler approach.</p><div class="quiz-options">' +
     [['no','Usually no'],['reactive','Yes, it gets irritated easily'],['current','It is irritated right now'],['unsure','I’m not sure']].map(([v,l])=>'<label class="quiz-choice"><input type="radio" name="sensitivity" value="'+v+'"><span>'+l+'</span></label>').join('')+'</div></fieldset>' +
     '<fieldset data-quiz-step="4" hidden><legend>5. Do you already own any of these?</legend><p class="hint">Tick what you have. We’ll avoid recommending a duplicate.</p><div class="owned-checks">'+productChecks+'</div><label class="quiz-choice"><input type="checkbox" name="owned" value="__other"><span>I already have another product / I’m not sure</span></label></fieldset>' +
-    '<div class="quiz-actions"><button type="button" data-action="discovery-back" hidden>← Back</button><button type="button" class="primary" data-action="discovery-next">Continue →</button><button type="submit" id="discovery-submit" class="primary" hidden>Show my matches →</button></div></form>' +
+    '<div class="quiz-actions"><button type="button" data-action="discovery-back" hidden>← Back</button><button type="button" class="primary" data-action="discovery-next">Next question →</button><button type="submit" id="discovery-submit" class="primary" hidden>Show my matches →</button></div></form>' +
     '<section id="recommendation-result" class="recommendation" aria-live="polite"><div class="result-empty"><div class="result-orb">✦</div><span class="slot">Your results will appear here</span><h2>Let’s get to know your skin.</h2><p>Once you finish the questions, I’ll explain why each suggested product may match your selected concern.</p></div></section></div>' +
     '<p class="wellness-note">This is an educational product-discovery tool, not a diagnosis or medical advice. Product fit depends on your own skin and the current pack label. Patch test new products and stop if irritation occurs. If your skin is currently irritated or a concern is persistent, consider professional advice.</p>';
 }
