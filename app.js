@@ -199,6 +199,16 @@ function settings(id, targetMode=state.mode, fromOwnerPath=false) {
     <p class="notice" role="alert" id="error"></p><div class="actions"><button class="primary" type="submit">Save bottle</button></div></form>`);
 }
 document.addEventListener('submit',e=>{
+  if(e.target.id==='loyalty-feedback'){
+    e.preventDefault();
+    const feedback=new FormData(e.target).get('feedback').trim();
+    if(feedback.length<10) return;
+    const result=Loyalty.claim('feedback');
+    dialog.close();
+    if(result.ok){say('Thanks for sharing. You earned '+result.earned+' Care Points.');render();}
+    else say(result.storageError?'Could not save points on this device.':'Feedback reward already claimed.');
+    return;
+  }
   if(e.target.id!=='discovery-form') return;
   e.preventDefault();
   const data=new FormData(e.target);
@@ -245,7 +255,23 @@ document.addEventListener('click',e=>{
     modal('Choose your shelf',`<div class="dialog-copy"><p>${example?'You’re exploring an example bottle. Its amounts and schedule are illustrative.':'Your personal shelf holds the products and schedule you entered.'}</p><p class="muted">Each shelf is saved separately in this browser. Clearing browser data removes your records.</p>${button('switch',example?'Start or open my personal shelf':'Explore the example shelf','','primary')}</div>`);
   }
   if(act==='pick-owned') chooseOwned();
-  if(act==='loyalty-claim'){const result=Loyalty.claim(el.dataset.activity);if(result.ok){say('You earned '+result.earned+' Care Points.');render();}else say(result.storageError?'Could not save points on this device.':'This activity is already completed.');}
+  if(act==='loyalty-claim'){
+    const activity=el.dataset.activity;
+    if(activity==='feedback'){
+      modal('Share your product experience',`<form id="loyalty-feedback"><p>What worked well, what did not, or what would you improve? Please do not include medical or highly personal information.</p><textarea name="feedback" rows="4" required minlength="10" maxlength="1200" placeholder="Share an honest, optional comment"></textarea><div class="actions"><button class="primary" type="submit">Submit feedback</button></div></form>`);
+    } else if(activity==='pack_return'){
+      modal('Confirm responsible pack disposal',`<div class="dialog-copy"><p>Have you finished this pack and disposed of or recycled it responsibly according to local facilities?</p><div class="actions">${button('confirm-pack-return','Yes, I have', '', 'primary')}${button('close','Not yet','','linkbtn')}</div></div>`);
+    } else {
+      const result=Loyalty.claim(activity);
+      if(result.ok){say('You earned '+result.earned+' Care Points.');render();}
+      else say(result.storageError?'Could not save points on this device.':'This activity is already completed.');
+    }
+  }
+  if(act==='confirm-pack-return'){
+    const result=Loyalty.claim('pack_return');dialog.close();
+    if(result.ok){say('You earned '+result.earned+' Care Points.');render();}
+    else say('This activity is already completed.');
+  }
   if(act==='save-quote'){try{localStorage.setItem('bodywise-saved-quote',Wellness.dailyQuote(dateKey()));say('Thought saved on this device.');render();}catch{say('Could not save on this device.');}}
   if(act==='setup-owned') settings(id,'personal',true);
   if(act==='feature'){selected=id;render();}
@@ -254,6 +280,7 @@ document.addEventListener('click',e=>{
   if(act==='switch'){state.mode=state.mode==='example'?'personal':'example';selected='';dialog.close();save('Shelf switched.');}
   if(act==='guide'){
     const p=catalog[id];
+    if(state.mode==='personal') Loyalty.claim('guide_'+id);
     modal(p.name,`<div class="dialog-copy"><p class="slot">Be Bodywise · ${p.size} mL</p><h3>How to use</h3><p>${p.guide}</p>${expectation(p)}<h3>Before first use</h3><p>The brand advises a patch test. Avoid use if you notice redness, itching or irritation. Check your own label for the directions and ingredients for your pack.</p><div class="actions">${button('open-formula','See full formula →',idAttr(id))}</div></div>`);
   }
   if(act==='open-formula'){dialog.close();location.hash='ingredients/'+id;}
