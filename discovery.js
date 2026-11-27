@@ -26,3 +26,5 @@ const Discovery = (() => {
   }
   return {recommend};
 })();
+
+if (typeof module !== 'undefined') module.exports = Discovery;
