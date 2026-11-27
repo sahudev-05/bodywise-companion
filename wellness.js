@@ -26,3 +26,5 @@ const Wellness = (() => {
   function dailyQuote(key) { return quotes[indexFor(key, quotes.length)]; }
   return {dailyTip, dailyQuote};
 })();
+
+if (typeof module !== 'undefined') module.exports = Wellness;
