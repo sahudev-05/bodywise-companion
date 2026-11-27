@@ -21,10 +21,8 @@
   function enhance() {
     if (location.hash.split('/')[0] !== '#experience') return;
     const main = document.querySelector('main');
-    if (!main || main.dataset.expectationEnhanced === 'yes') return;
-    const heading = main.querySelector('h1');
-    if (!heading) return;
-    main.dataset.expectationEnhanced = 'yes';
+    const heading = main && main.querySelector('h1');
+    if (!heading || heading.textContent === 'Expectation Match') return;
     heading.textContent = 'Expectation Match';
     const intro = heading.parentElement;
     const subtitle = intro && intro.querySelector('.muted');
@@ -73,16 +71,7 @@
     document.title = 'Bodywise Companion · Expectation Match';
   }
   const main = document.querySelector('main');
-  if (main) {
-    new MutationObserver(() => {
-      if (location.hash.split('/')[0] === '#experience' && main.dataset.expectationEnhanced !== 'yes') enhance();
-    }).observe(main, {childList:true,subtree:true});
-  }
-  window.addEventListener('hashchange', () => {
-    if (location.hash.split('/')[0] === '#experience') {
-      if (main) delete main.dataset.expectationEnhanced;
-      requestAnimationFrame(enhance);
-    }
-  });
+  if (main) new MutationObserver(() => enhance()).observe(main, {childList:true,subtree:true});
+  window.addEventListener('hashchange', () => requestAnimationFrame(enhance));
   enhance();
 })();
