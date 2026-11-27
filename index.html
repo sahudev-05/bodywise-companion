@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10141a">
+  <meta name="description" content="Plan your Be Bodywise routine, record uses and estimate how long your bottle will last. An independent Mosaic Fellowship prototype.">
+  <title>Bodywise Companion · Today</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="model.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <a class="skiplink" href="#main">Skip to content</a>
+  <header><div class="bar">
+    <a href="#today" class="brand" aria-label="Bodywise Companion home"><i class="mark" aria-hidden="true">✳</i><span>Bodywise <em>Companion</em></span></a>
+    <nav aria-label="Main navigation"><a href="#today">Today</a><a href="#shelf">My shelf</a><a href="#journal">Journal</a></nav>
+    <button id="mode" class="mode"></button>
+  </div></header>
+  <main id="main" tabindex="-1"></main>
+  <footer><span>Bodywise Companion</span><span>Independent Mosaic Fellowship prototype</span></footer>
+  <dialog id="dialog" aria-labelledby="dialog-title"><div id="sheet"></div></dialog>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <noscript>Enable JavaScript to use the routine planner.</noscript>
+</body>
+</html>
