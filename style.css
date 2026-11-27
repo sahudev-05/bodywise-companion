@@ -124,3 +124,23 @@ footer{border-top:1px solid var(--line);display:flex;justify-content:space-betwe
 .comparison thead img{height:115px;width:100%;object-fit:contain;display:block;margin:4px 0 14px}
 @media(max-width:650px){.path-card{padding:10px}.path-card strong{font-size:14px}.path-card span{font-size:12px}.path-card:after{display:none}.starting-paths{gap:8px}
 .comparison td,.comparison th{padding:9px 7px;font-size:13px}.comparison th[scope=row],.comparison thead td{width:22%}.comparison button{padding:7px;font-size:12px}.comparison thead img{height:85px}}
+
+
+/* Discovery and everyday wellbeing */
+.discovery-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,.85fr);gap:18px;align-items:start}
+.discovery-form,.recommendation,.wellness-card,.quote-card{background:white;border:1px solid var(--line);border-radius:12px;padding:clamp(18px,3vw,26px)}
+.discovery-form label{display:block;margin:14px 0}
+.recommendation{background:#f3f8fb;min-height:160px}
+.recommendation h2{font-size:25px;margin:7px 0}
+.recommendation .catalog-photo{height:145px}
+.recommendation .catalog-photo img{height:125px}
+.recommendation p{margin:10px 0}
+.recommendation .actions{margin-top:16px}
+.wellness-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:16px;margin-top:18px}
+.wellness-card h2,.quote-card h2{font-size:25px;margin:8px 0}
+.wellness-card p,.quote-card p{margin:9px 0}
+.wellness-card .slot{margin-bottom:10px}
+.quote-card{background:#edf5fb}
+.quote-card blockquote{font-size:clamp(21px,3vw,30px);line-height:1.3;letter-spacing:-.025em;margin:16px 0}
+.wellness-note{font-size:13px;color:var(--muted);margin-top:16px}
+@media(max-width:700px){.discovery-layout,.wellness-grid{grid-template-columns:1fr}.discovery-form,.recommendation,.wellness-card,.quote-card{padding:17px}}
