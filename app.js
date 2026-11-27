@@ -32,7 +32,7 @@ let toastTimer;
 const fmt = n => Number(n.toFixed(2)).toLocaleString();
 const shelf = () => state[state.mode];
 const bottles = () => Object.values(shelf().bottles);
-const page = () => { const route=location.hash.split('/')[0].slice(1); return ['today','shelf','journal','compare','discover','wellness','loyalty'].includes(route)?route:route==='ingredients'?'ingredients':'discover'; };
+const page = () => { const route=location.hash.split('/')[0].slice(1); return ['today','shelf','journal','compare','discover','wellness','loyalty','experience'].includes(route)?route:route==='ingredients'?'ingredients':'discover'; };
 const button = (action,label,attrs='',cl='') => `<button class="${cl}" data-action="${action}" ${attrs}>${label}</button>`;
 const idAttr = id => `data-id="${id}"`;
 const guideBtn = id => button('guide','Read product guide ↗',idAttr(id),'linkbtn');
@@ -202,6 +202,16 @@ function wellnessPage() {
     '<section class="wellness-card" style="margin-top:16px"><div class="slot">A gentle reminder</div><h2>Consistency without pressure</h2><p>Follow product directions, be patient with routines and give yourself permission to keep things simple. You do not need a perfect routine to take care of yourself.</p></section>';
 }
 
+function escapeHTML(value) { return String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
+function experiencePage() {
+  const products=Experience.all();
+  const cards=products.map(p=>{
+    const days=Math.max(1,Math.floor((Date.now()-new Date(p.started+'T00:00:00').getTime())/86400000)+1);
+    const last=p.checkins[p.checkins.length-1];
+    return '<article class="experience-card"><div class="experience-top"><div><span class="slot">Started '+escapeHTML(p.started)+'</span><h2>'+escapeHTML(p.name)+'</h2></div><span class="experience-days">'+days+' days</span></div><div class="experience-metrics"><div><small>Price per mL / g</small><strong>₹'+(p.price/p.size).toFixed(2)+'</strong></div><div><small>Cost per elapsed day</small><strong>₹'+(p.price/days).toFixed(2)+'</strong></div><div><small>Check-ins</small><strong>'+p.checkins.length+'</strong></div></div><p><strong>What I hoped to improve:</strong> '+escapeHTML(p.goal||'Not specified')+'</p>'+(p.targetDays?'<p class="hint">Your chosen review point: '+p.targetDays+' days after starting. This is your personal check-in date, not a promised results timeline.</p>':'')+(last?'<div class="experience-last"><strong>Latest reflection · '+escapeHTML(last.date)+'</strong><p>Change noticed: '+escapeHTML(last.change)+'</p><p>Value for money: '+escapeHTML(last.value)+'</p>'+(last.note?'<p>'+escapeHTML(last.note)+'</p>':'')+'</div>':'<p class="hint">No experience check-in yet. Record how the product is working for you when you are ready.</p>')+'<div class="actions">'+button('experience-checkin','Add check-in',idAttr(p.id),'primary')+button('experience-remove','Remove',idAttr(p.id),'linkbtn')+'</div></article>';
+  }).join('');
+  return '<div class="eyebrow">Your own product experience</div><div class="intro"><div><h1>Is it worth it for you?</h1><p class="muted">Track what you expected, what you noticed and how the price feels over time.</p></div>'+button('experience-add','Add a product','','primary')+'</div><section class="experience-explainer"><strong>Why this exists</strong><p>Product pages explain product features, directions and pack prices. This space helps you reflect on your own experience after purchase. It does not judge whether a product is medically effective or guarantee results.</p></section>'+(cards||'<div class="card experience-empty"><h2>Your experience starts here.</h2><p>Add a product you have purchased. Enter the amount you paid, pack size and start date. Then record occasional, honest check-ins.</p>'+button('experience-add','Add my first product','','primary')+'</div>')+'<p class="wellness-note">Your entries stay in this browser on this device. They are not sent to Be Bodywise. Cost per elapsed day is purchase price divided by calendar days since you started—not a measure of how much product you used. Follow your pack directions; do not reduce use to improve the cost calculation.</p>';
+}
 function loyaltyPage() {
   const s=Loyalty.status();
   const activities=Object.entries(s.activities);
@@ -220,10 +230,10 @@ function render() {
   for (const a of document.querySelectorAll('nav a')) {
     if(a.hash.split('/')[0]==='#'+view) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current');
   }
-  main.innerHTML = (storageWarning?`<p role="alert" class="notice">${storageWarning}</p>`:'')+({today,shelf:shelfPage,journal,compare:comparisonPage,ingredients:ingredientPage,discover:discoverPage,wellness:wellnessPage,loyalty:loyaltyPage}[view]());
+  main.innerHTML = (storageWarning?`<p role="alert" class="notice">${storageWarning}</p>`:'')+({today,shelf:shelfPage,journal,compare:comparisonPage,ingredients:ingredientPage,discover:discoverPage,wellness:wellnessPage,loyalty:loyaltyPage,experience:experiencePage}[view]());
   mountViewer();
   if(view==='discover') updateDiscoveryStep();
-  document.title = 'Bodywise Companion · '+({today:'Today',shelf:'My shelf',journal:'Journal',compare:'Compare bottles',ingredients:'Ingredients',discover:'Discover',wellness:'Wellness',loyalty:'Rewards'}[view]);
+  document.title = 'Bodywise Companion · '+({today:'Today',shelf:'My shelf',journal:'Journal',compare:'Compare bottles',ingredients:'Ingredients',discover:'Discover',wellness:'Wellness',loyalty:'Rewards',experience:'My experience'}[view]);
 }
 function settings(id, targetMode=state.mode, fromOwnerPath=false) {
   const savedBottle = state[targetMode].bottles[id];
@@ -241,6 +251,18 @@ function settings(id, targetMode=state.mode, fromOwnerPath=false) {
     <p class="notice" role="alert" id="error"></p><div class="actions"><button class="primary" type="submit">Save bottle</button></div></form>`);
 }
 document.addEventListener('submit',e=>{
+  if(e.target.id==='experience-add-form') {
+    e.preventDefault(); const d=new FormData(e.target);
+    const result=Experience.add({name:d.get('name'),price:d.get('price'),size:d.get('size'),started:d.get('started'),goal:d.get('goal'),targetDays:d.get('targetDays')});
+    if(!result.ok){say(result.storageError?'Could not save on this device.':'Check the product details and try again.');return;}
+    dialog.close(); render(); say('Product added to My experience.'); return;
+  }
+  if(e.target.id==='experience-checkin-form') {
+    e.preventDefault(); const d=new FormData(e.target);
+    const result=Experience.checkin(d.get('id'),{date:d.get('date'),change:d.get('change'),value:d.get('value'),note:d.get('note')});
+    if(!result.ok){say(result.storageError?'Could not save on this device.':'Please complete the required fields.');return;}
+    dialog.close(); render(); say('Your check-in was saved.'); return;
+  }
   if(e.target.id==='loyalty-feedback'){
     e.preventDefault();
     const feedback=new FormData(e.target).get('feedback').trim();
@@ -311,7 +333,16 @@ document.addEventListener('click',e=>{
   const el=e.target.closest('button');
   if(!el) return;
   const act=el.dataset.action, id=el.dataset.id, slot=el.dataset.slot, b=shelf().bottles[id];
-  if(act==='discovery-edit'){document.querySelector('#discovery-form').scrollIntoView({behavior:'smooth',block:'start'});return;}
+  if(act==='experience-add') {
+      const today=dateKey();
+      modal('Add a product to track', '<form id="experience-add-form"><p class="hint">Enter the price you actually paid and the pack size printed on your product.</p><div class="fields"><label>Product name<input name="name" required maxlength="160" placeholder="e.g. 4% AHA BHA Underarm Roll-On"></label><label>Price paid (₹)<input name="price" type="number" min="1" step="0.01" required></label><label>Pack size (mL or g)<input name="size" type="number" min="0.1" step="0.1" required></label><label>Started using on<input name="started" type="date" max="'+today+'" value="'+today+'" required></label><label>What did you hope it would improve?<input name="goal" maxlength="160" placeholder="e.g. underarm odour"></label><label>When would you like to review your experience? (days)<input name="targetDays" type="number" min="0" max="365" placeholder="Optional"></label></div><p class="hint">A review date is a reminder you choose, not a brand-promised results timeline.</p><div class="actions"><button class="primary" type="submit">Save product</button></div></form>'); return;
+    }
+    if(act==='experience-checkin') {
+      const p=Experience.all().find(x=>x.id===id); if(!p)return;
+      modal('Reflect on '+escapeHTML(p.name), '<form id="experience-checkin-form"><input type="hidden" name="id" value="'+escapeHTML(id)+'"><label>Check-in date<input name="date" type="date" value="'+dateKey()+'" required></label><label>What change have you noticed?<select name="change" required><option value="">Choose honestly</option><option>No noticeable change</option><option>A little change</option><option>Clear improvement</option><option>Worse or uncomfortable</option><option>Not sure yet</option></select></label><label>How does the quantity and price feel?<select name="value" required><option value="">Choose one</option><option>Feels worth the price</option><option>Fair for the price</option><option>Finishes too quickly</option><option>Too expensive for my experience</option><option>Not sure yet</option></select></label><label>Anything else? (optional)<textarea name="note" rows="3" maxlength="160" placeholder="Optional note"></textarea></label><div class="actions"><button class="primary" type="submit">Save check-in</button></div></form>'); return;
+    }
+    if(act==='experience-remove') { if(Experience.remove(id)){render();say('Product entry removed.');}else say('Could not update this device.'); return; }
+    if(act==='discovery-edit'){document.querySelector('#discovery-form').scrollIntoView({behavior:'smooth',block:'start'});return;}
   if(act==='discovery-next'||act==='discovery-back') {
     const form=document.querySelector('#discovery-form');
     if(act==='discovery-back'){discoveryStep=Math.max(0,discoveryStep-1);updateDiscoveryStep();return;}

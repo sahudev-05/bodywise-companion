@@ -16,6 +16,10 @@ Choose **Body lotion** or **Body wash** on Today. Drag or swipe the pack to rota
 
 **Explore ingredients** opens the selected formula. Search by name or function, or select a role such as cleansing, hydration or preservation. Each listed component has a description. The guide splits compound blends into their individual named constituents. Only brand-disclosed percentages appear.
 
+## Personal product experience and value reflection
+
+**My experience** is a post-purchase reflection tool. Add a product with the price actually paid, pack size and start date; record what you hoped to improve; then add optional check-ins about perceived change and whether the quantity/price feels fair. It calculates price per mL or g and purchase price per elapsed calendar day. The latter is explicitly not a consumption or efficacy metric. User-entered review dates are reminders, not promised result timelines. Entries are stored locally in this browser and are not sent to Be Bodywise. This feature is a prototype for capturing the expectation-to-experience gap; it does not diagnose skin conditions, judge clinical efficacy or replace product directions.
+
 ## Routine and bottle estimates
 
 The example lotion has 128 mL remaining and uses an illustrative 2 mL per day. Log a use to record 126 mL, or skip to leave the balance unchanged. Undo restores the previous balance. Journal preserves check-ins across page reloads.

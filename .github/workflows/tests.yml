@@ -2,7 +2,7 @@ name: Prototype tests
 on:
   pull_request:
   push:
-    branches: [main, feature/customer-companion-expansion, fix/blank-homepage-runtime]
+    branches: [main, feature/customer-companion-expansion, fix/blank-homepage-runtime, feature/product-experience-value-tracker]
 jobs:
   test:
     runs-on: ubuntu-latest
