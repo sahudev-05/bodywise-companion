@@ -4,6 +4,8 @@
 
 ## First visit
 
+The **Discover** page offers a transparent, rule-based suggestion from the two products currently documented in this prototype. It explains the match and deliberately declines to recommend when the selected concern is outside that small catalogue. It is educational guidance, not a diagnosis or personalised medical advice. The **Wellness** page rotates a date-stable wellbeing tip and an original daily thought. Both are optional supporting experiences.
+
 **Help me choose** opens a side-by-side comparison of the two bottles, including their purpose, shower step, rinse-off or leave-on directions and brand sources. **I own this already** opens a pack picker and creates or edits the chosen bottle on the personal shelf when saved.
 
 Each bottle overview and usage guide includes **What to expect**. The lotion guide attributes the 3–4 month range to Be Bodywise. The wash guide describes variable results without assigning a deadline.
@@ -38,7 +40,7 @@ The repository root is a static website. Serve it over HTTP or HTTPS for the int
 
 The 3D viewer is Google's [model-viewer](https://github.com/google/model-viewer), version 4.4.0. Its distribution is in viewer.min.js with its license in VIEWER-LICENSE.txt. Formula data and product-specific roles are in formula.js. Routine logic and calculation tests are in model.js and model.test.cjs.
 
-Run the six calculation tests with Node's built-in runner: `node --test model.test.cjs`. Browser checks cover rotation on both models, touch dragging, reset, formula counts and filtering, persisted check-ins, and the responsive views.
+Run the calculation and discovery tests with Node's built-in runner: `node --test *.test.cjs`. Browser checks cover rotation on both models, touch dragging, reset, formula counts and filtering, persisted check-ins, and the responsive views.
 
 ## Fellowship evidence
 
