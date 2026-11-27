@@ -2,6 +2,12 @@
 
 [Open the live app](https://sahudev-05.github.io/bodywise-companion/). An independent Mosaic Fellowship Builder Round prototype for people who already use Be Bodywise products.
 
+## First visit
+
+**Help me choose** opens a side-by-side comparison of the two bottles, including their purpose, shower step, rinse-off or leave-on directions and brand sources. **I own this already** opens a pack picker and creates or edits the chosen bottle on the personal shelf when saved.
+
+Each bottle overview and usage guide includes **What to expect**. The lotion guide attributes the 3–4 month range to Be Bodywise. The wash guide describes variable results without assigning a deadline.
+
 ## Try a bottle
 
 Choose **Body lotion** or **Body wash** on Today. Drag or swipe the pack to rotate it, pinch or scroll to zoom, or use the rotation buttons. **Front** restores the initial facing direction. The 200 mL 5% Lactic Acid Body Lotion and 250 mL 1% Salicylic Acid Body Wash each have their own textured GLB mesh. Front artwork comes from the brand's pack photography. Geometry is reconstructed from the photographs. The unphotographed rear retains the label colours.

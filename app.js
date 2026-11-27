@@ -31,7 +31,7 @@ let toastTimer;
 const fmt = n => Number(n.toFixed(2)).toLocaleString();
 const shelf = () => state[state.mode];
 const bottles = () => Object.values(shelf().bottles);
-const page = () => location.hash.split('/')[0]==='#ingredients' ? 'ingredients' : ['today','shelf','journal'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'today';
+const page = () => location.hash.split('/')[0]==='#ingredients' ? 'ingredients' : ['today','shelf','journal','compare'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'today';
 const button = (action,label,attrs='',cl='') => `<button class="${cl}" data-action="${action}" ${attrs}>${label}</button>`;
 const idAttr = id => `data-id="${id}"`;
 const guideBtn = id => button('guide','Read product guide ↗',idAttr(id),'linkbtn');
@@ -75,7 +75,7 @@ function hero(id) {
   return `<div class="hero">${bottleStage(id)}<section class="hero-info">
   <div class="kicker">${id==='lotion'?'Leave-on moisturiser':'Rinse-off cleanser'}</div><h2>${p.name}</h2>
   <p>${p.description}</p><div class="actions"><a class="primary btn" href="#ingredients/${id}">Explore ingredients →</a>
-  ${guideBtn(id)}</div>${b?bottleForecast(b):`<div class="forecast"><p>Add this bottle to track your own schedule and remaining quantity.</p>${button('edit','Add to shelf',idAttr(id))}</div>`}</section></div>`;
+  ${guideBtn(id)}</div>${expectation(p)}${b?bottleForecast(b):`<div class="forecast"><p>Add this bottle to track your own schedule and remaining quantity.</p>${button('edit','Add to shelf',idAttr(id))}</div>`}</section></div>`;
 }
 function routine() {
   const slots = slotsToday();
@@ -92,10 +92,37 @@ function catalogTiles() {
   return `<div class="tiles">${Object.entries(catalog).map(([id,p])=>`<article class="card catalog-card"><div class="catalog-photo">${packshot(id)}</div><div class="slot">${p.type} · ${p.size} mL</div>
     <h3>${p.name}</h3><p>${p.description}</p><a href="#ingredients/${id}">View ingredients →</a><div class="actions">${shelf().bottles[id]?editBtn(id,'Bottle settings'):button('edit','Add to shelf',idAttr(id),'primary')}</div></article>`).join('')}</div>`;
 }
+function brandLink(p) {
+  return `<a href="${p.source}" target="_blank" rel="noopener noreferrer">Be Bodywise product guide ↗</a>`;
+}
+function expectation(p) {
+  return `<section class="expectation"><h3>What to expect</h3><p>${p.expectation}</p><p>${p.timing}</p>${brandLink(p)}</section>`;
+}
+function startingPaths() {
+  return `<div class="starting-paths" aria-label="Getting started">
+    <a class="path-card" href="#compare"><strong>Help me choose</strong><span>Compare the wash and lotion</span></a>
+    <button class="path-card" data-action="pick-owned"><strong>I own this already</strong><span>Set up my bottle and routine</span></button></div>`;
+}
+function chooseOwned() {
+  modal('Which bottle do you own?',`<div class="owned-packs">${Object.entries(catalog).map(([id,p])=>
+    `<button data-action="setup-owned" data-id="${id}">${packshot(id)}<span><strong>${p.name}</strong><small>${p.size} mL · ${state.personal.bottles[id]?'Edit my routine':'Set up my routine'}</small></span></button>`).join('')}</div>`);
+}
+function comparisonPage() {
+  const ids=['wash','lotion'];
+  const cells = renderCell => ids.map(id=>`<td>${renderCell(catalog[id],id)}</td>`).join('');
+  const row = (label,renderCell) => `<tr><th scope="row">${label}</th>${cells(renderCell)}</tr>`;
+  return `<a class="back-link" href="#today">← Your routine</a><div class="intro"><h1>Compare the bottles</h1></div>
+    <table class="comparison" aria-label="Body wash and body lotion compared"><thead><tr><td></td>${ids.map(id=>`<th scope="col">${packshot(id)}<strong>${catalog[id].name}</strong><small>${catalog[id].size} mL</small></th>`).join('')}</tr></thead><tbody>
+    ${row('What it’s for',p=>p.purpose)}${row('When to use it',p=>p.step)}${row('Rinse or leave on?',p=>p.finish)}
+    ${row('What to expect',p=>p.expectation)}${row('Timing',p=>p.timing)}
+    ${row('Product details',(p,id)=>`<a href="#ingredients/${id}">Full formula</a><br>${brandLink(p)}`)}
+    ${row('Your routine',(p,id)=>button('setup-owned',state.personal.bottles[id]?'Edit my routine':'Set up my bottle',idAttr(id)+' aria-label="Set up '+p.short.toLowerCase()+'"','primary'))}
+    </tbody></table>`;
+}
 function today() {
   const id = selected || bottles()[0]?.id || 'lotion';
   return `<div class="eyebrow">${new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'})}</div>
-    <div class="intro"><h1>Your routine</h1>${productTabs(id,'feature')}</div>${hero(id)}
+    <div class="intro"><h1>Your routine</h1>${productTabs(id,'feature')}</div>${startingPaths()}${hero(id)}
     <div class="below"><section><div class="section-title"><h2>Today’s check-in</h2></div>${routine()}</section>
     <section><div class="section-title"><h2>Key ingredients</h2><a href="#ingredients/${id}">Full formula →</a></div>
     ${activeCards(id)}</section></div>`;
@@ -121,16 +148,17 @@ function render() {
   for (const a of document.querySelectorAll('nav a')) {
     if(a.hash.split('/')[0]==='#'+view) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current');
   }
-  main.innerHTML = (storageWarning?`<p role="alert" class="notice">${storageWarning}</p>`:'')+({today,shelf:shelfPage,journal,ingredients:ingredientPage}[view]());
+  main.innerHTML = (storageWarning?`<p role="alert" class="notice">${storageWarning}</p>`:'')+({today,shelf:shelfPage,journal,compare:comparisonPage,ingredients:ingredientPage}[view]());
   mountViewer();
-  document.title = 'Bodywise Companion · '+({today:'Today',shelf:'My shelf',journal:'Journal',ingredients:'Ingredients'}[view]);
+  document.title = 'Bodywise Companion · '+({today:'Today',shelf:'My shelf',journal:'Journal',compare:'Compare bottles',ingredients:'Ingredients'}[view]);
 }
-function settings(id) {
-  const b = shelf().bottles[id] || newBottle(id);
+function settings(id, targetMode=state.mode, fromOwnerPath=false) {
+  const savedBottle = state[targetMode].bottles[id];
+  const b = savedBottle || newBottle(id);
   const field = (name,label,value,min,max,step='any',required=true)=>`<label>${label}<input type="number" name="${name}" min="${min}" max="${max}" step="${step}" value="${value??''}" ${required?'required':''}></label>`;
   const checks = (name,list,values)=>list.map(([v,label])=>`<label><input type="checkbox" name="${name}" value="${v}" ${values.includes(v)?'checked':''}>${label}</label>`).join('');
-  modal(shelf().bottles[id]?'Edit your bottle':'Set up your bottle',`<p>${catalog[id].name}</p><p class="hint">Enter your own usage and follow your package directions.${state.mode==='example'?' Changes here apply to the example shelf.':''}</p>
-    <form id="settings" data-id="${id}"><div class="fields">
+  modal(savedBottle?'Edit your bottle':'Set up your bottle',`<p>${catalog[id].name}</p><p class="hint">Enter your own usage and follow your package directions.${targetMode==='example'?' Changes here apply to the example shelf.':''}</p>
+    <form id="settings" data-id="${id}" data-mode="${targetMode}" data-owner-path="${fromOwnerPath}"><div class="fields">
     ${field('size','Bottle capacity (mL)',b.size,0.01,10000)}${field('remaining','Remaining now (mL)',b.remaining,0,10000)}
     <label>Dispenser<select name="unit">${['pump','drop','portion','swipe'].map(u=>`<option ${b.unit===u?'selected':''}>${u}</option>`).join('')}</select></label>
     ${field('units','Units per application',b.units,0.01,1000)}${field('output','mL per unit (optional)',b.output,0.001,1000,'any',false)}</div>
@@ -150,6 +178,7 @@ document.addEventListener('submit',e=>{
   if(!days.length || !slots.length) err='Select at least one day and one time.';
   if(remaining>size) err='Remaining quantity must fit inside the bottle.';
   if(err){document.querySelector('#error').textContent=err;return;}
+  state.mode = form.dataset.mode;
   const b = shelf().bottles[id] || newBottle(id);
   const corrected = remaining !== b.remaining || size !== b.size || form.elements.remaining.dataset.edited==='yes';
   Object.assign(b,{size,remaining,days,slots,units:number('units'),unit:data.get('unit'),output:number('output')||null});
@@ -157,6 +186,7 @@ document.addEventListener('submit',e=>{
   shelf().bottles[id] = b;
   selected = id;
   dialog.close();
+  if (form.dataset.ownerPath==='true' && page()!=='today') location.hash='today';
   save('Bottle saved.');
 });
 document.addEventListener('input',e=>{if(e.target.name==='remaining') e.target.dataset.edited='yes';});
@@ -169,13 +199,15 @@ document.addEventListener('click',e=>{
     const example = state.mode==='example';
     modal('Choose your shelf',`<div class="dialog-copy"><p>${example?'You’re exploring an example bottle. Its amounts and schedule are illustrative.':'Your personal shelf holds the products and schedule you entered.'}</p><p class="muted">Each shelf is saved separately in this browser. Clearing browser data removes your records.</p>${button('switch',example?'Start or open my personal shelf':'Explore the example shelf','','primary')}</div>`);
   }
+  if(act==='pick-owned') chooseOwned();
+  if(act==='setup-owned') settings(id,'personal',true);
   if(act==='feature'){selected=id;render();}
   if(act==='formula'){location.hash='ingredients/'+id;}
   if(act==='close') dialog.close();
   if(act==='switch'){state.mode=state.mode==='example'?'personal':'example';selected='';dialog.close();save('Shelf switched.');}
   if(act==='guide'){
     const p=catalog[id];
-    modal(p.name,`<div class="dialog-copy"><p class="slot">Be Bodywise · ${p.size} mL</p><h3>How to use</h3><p>${p.guide}</p><h3>Before first use</h3><p>The brand advises a patch test. Avoid use if you notice redness, itching or irritation. Check your own label for the directions and ingredients for your pack.</p><a href="${p.source}" target="_blank" rel="noopener noreferrer">Official product instructions ↗</a><div class="actions">${button('open-formula','See full formula →',idAttr(id))}</div></div>`);
+    modal(p.name,`<div class="dialog-copy"><p class="slot">Be Bodywise · ${p.size} mL</p><h3>How to use</h3><p>${p.guide}</p>${expectation(p)}<h3>Before first use</h3><p>The brand advises a patch test. Avoid use if you notice redness, itching or irritation. Check your own label for the directions and ingredients for your pack.</p><div class="actions">${button('open-formula','See full formula →',idAttr(id))}</div></div>`);
   }
   if(act==='open-formula'){dialog.close();location.hash='ingredients/'+id;}
   if(act==='edit') settings(id);

@@ -2,8 +2,16 @@
 const Companion = (() => {
   const catalog = {
     lotion: { name:'5% Lactic Acid Body Lotion', short:'Body lotion', size:200, type:'Body care',
+      purpose:'Moisturise rough, dry-feeling body skin and gently exfoliate its surface.',
+      step:'After showering', finish:'Leave on until absorbed.',
+      expectation:'Rough areas may gradually feel softer and smoother as the lotion moisturises and exfoliates.',
+      timing:'Be Bodywise suggests 3–4 months of consistent use to notice a difference. The timing and degree of change vary from person to person.',
       description:'A post-shower body lotion with lactic acid.', guide:'After showering, massage the lotion over the body until absorbed. Use broad-spectrum sunscreen during the day, as the brand directs.', source:'https://bebodywise.com/product/5-lactic-acid-body-lotion' },
     wash: { name:'1% Salicylic Acid Body Wash', short:'Body wash', size:250, type:'Body care',
+      purpose:'Cleanse the body and exfoliate buildup on textured or blemish-prone skin.',
+      step:'In the shower', finish:'Rinse thoroughly with water.',
+      expectation:'The wash cleanses during your shower. With regular use, salicylic acid may help rough areas feel smoother.',
+      timing:'The brand recommends consistent use. How much your skin texture changes, and how quickly, can vary.',
       description:'A rinse-off cleanser with salicylic acid.', guide:'Apply to wet skin, rinse thoroughly, then pat dry.', source:'https://bebodywise.com/product/1-salicylic-acid-body-wash-250ml-xp' }
   };
   const weekdays = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
