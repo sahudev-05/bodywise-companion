@@ -4,6 +4,8 @@
 
 ## First visit
 
+The **Find my routine** experience is the default first-visit page and the primary entry point in the navigation. It opens as a guided, conversational assistant (tap-based, rule-driven—not a live AI chatbot) with a five-step consultation covering care area, skin type, concerns, sensitivity and products already owned. It filters a broader product catalogue across face, body, underarm and foot care, explains why each shortlist result matched, avoids suggesting products the user already owns, and declines to guess when there is no responsible match. Skin type is used as context, not diagnosis. Product pages link to Be Bodywise. The usage estimator lets users change mL per use and uses per week to see an approximate bottle lifespan; it is an estimate, not a promise. It is educational guidance, not a diagnosis or personalised medical advice. The **Wellness** page rotates a date-stable wellbeing tip and an original daily thought. Both are optional supporting experiences. The **Rewards** page demonstrates a low-pressure loyalty layer: points are earned for reading product guidance, sharing feedback and confirming responsible empty-pack disposal—not for increasing usage or buying unnecessarily. Points are local-only and not redeemable. Real purchase-linked rewards require a brand-authorised commerce integration and order verification.
+
 **Help me choose** opens a side-by-side comparison of the two bottles, including their purpose, shower step, rinse-off or leave-on directions and brand sources. **I own this already** opens a pack picker and creates or edits the chosen bottle on the personal shelf when saved.
 
 Each bottle overview and usage guide includes **What to expect**. The lotion guide attributes the 3–4 month range to Be Bodywise. The wash guide describes variable results without assigning a deadline.
@@ -38,8 +40,8 @@ The repository root is a static website. Serve it over HTTP or HTTPS for the int
 
 The 3D viewer is Google's [model-viewer](https://github.com/google/model-viewer), version 4.4.0. Its distribution is in viewer.min.js with its license in VIEWER-LICENSE.txt. Formula data and product-specific roles are in formula.js. Routine logic and calculation tests are in model.js and model.test.cjs.
 
-Run the six calculation tests with Node's built-in runner: `node --test model.test.cjs`. Browser checks cover rotation on both models, touch dragging, reset, formula counts and filtering, persisted check-ins, and the responsive views.
+Run the calculation, discovery and loyalty tests with Node's built-in runner: `node --test *.test.cjs`. Browser checks cover rotation on both models, touch dragging, reset, formula counts and filtering, persisted check-ins, and the responsive views.
 
 ## Fellowship evidence
 
-The consumer problem is a working hypothesis. Five genuine, consented customer interviews and observed usability sessions are still needed before claiming validation. No customer identities or interview findings are included. Codex assisted with implementation and automated testing.
+The project owner reports completing customer interviews using Joinify and formulating a final problem statement. See `CUSTOMER-RESEARCH.md` for the owner's supplied overall pattern, final problem statement and HMW statement. The reported repeat-purchase observation is treated as a retention hypothesis to validate, not proof that every customer wants loyalty rewards. Observed usability testing should be documented separately. No customer identities should be committed.
