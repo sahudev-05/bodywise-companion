@@ -144,3 +144,17 @@ footer{border-top:1px solid var(--line);display:flex;justify-content:space-betwe
 .quote-card blockquote{font-size:clamp(21px,3vw,30px);line-height:1.3;letter-spacing:-.025em;margin:16px 0}
 .wellness-note{font-size:13px;color:var(--muted);margin-top:16px}
 @media(max-width:700px){.discovery-layout,.wellness-grid{grid-template-columns:1fr}.discovery-form,.recommendation,.wellness-card,.quote-card{padding:17px}}
+
+
+/* Responsible loyalty experience */
+.loyalty-summary,.loyalty-card{background:white;border:1px solid var(--line);border-radius:12px;padding:clamp(18px,3vw,26px);margin:16px 0}
+.loyalty-summary{display:grid;grid-template-columns:.8fr 1.2fr;gap:20px;align-items:center;background:#edf5fb}
+.loyalty-points{display:block;font-size:clamp(40px,7vw,64px);line-height:1.1;color:var(--navy);font-weight:700}
+.loyalty-progress .spread{display:flex;justify-content:space-between;gap:10px;margin-bottom:10px}
+.loyalty-progress small{display:block;margin-top:8px;color:var(--muted)}
+.loyalty-activity{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 0;border-top:1px solid var(--line)}
+.loyalty-activity strong,.loyalty-activity small{display:block}
+.loyalty-activity small{color:var(--muted);margin-top:4px}
+.loyalty-activity .success{white-space:nowrap}
+#loyalty-feedback textarea{width:100%;max-width:100%;min-height:110px;padding:12px;border:1px solid var(--line);border-radius:8px;font:inherit}
+@media(max-width:650px){.loyalty-summary{grid-template-columns:1fr}.loyalty-activity{align-items:flex-start}.loyalty-activity .primary{white-space:nowrap}}
