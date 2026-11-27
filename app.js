@@ -32,7 +32,7 @@ let toastTimer;
 const fmt = n => Number(n.toFixed(2)).toLocaleString();
 const shelf = () => state[state.mode];
 const bottles = () => Object.values(shelf().bottles);
-const page = () => { const route=location.hash.split('/')[0].slice(1); return ['today','shelf','journal','compare','discover','wellness','loyalty'].includes(route)?route:route==='ingredients'?'ingredients':'today'; };
+const page = () => { const route=location.hash.split('/')[0].slice(1); return ['today','shelf','journal','compare','discover','wellness','loyalty'].includes(route)?route:route==='ingredients'?'ingredients':'discover'; };
 const button = (action,label,attrs='',cl='') => `<button class="${cl}" data-action="${action}" ${attrs}>${label}</button>`;
 const idAttr = id => `data-id="${id}"`;
 const guideBtn = id => button('guide','Read product guide ↗',idAttr(id),'linkbtn');
@@ -123,7 +123,7 @@ function comparisonPage() {
 function today() {
   const id = selected || bottles()[0]?.id || 'lotion';
   return `<div class="eyebrow">${new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'})}</div>
-    <div class="intro"><h1>Your routine</h1>${productTabs(id,'feature')}</div>${startingPaths()}${hero(id)}
+    <div class="intro"><h1>Your routine</h1><p class="muted">Your personal care, at your pace.</p>${productTabs(id,'feature')}</div><a class="home-discovery-cta" href="#discover"><span><strong>Not sure what suits you?</strong><small>Answer a few quick questions and get a relevant product shortlist.</small></span><span class="cta-arrow">Find my routine →</span></a>${startingPaths()}${hero(id)}
     <div class="below"><section><div class="section-title"><h2>Today’s check-in</h2></div>${routine()}</section>
     <section><div class="section-title"><h2>Key ingredients</h2><a href="#ingredients/${id}">Full formula →</a></div>
     ${activeCards(id)}</section></div>`;
@@ -167,9 +167,8 @@ function discoveryProductCard(p,index) {
 function discoverPage() {
   discoveryStep=0;
   const productChecks=Discovery.products.map(p=>'<label class="quiz-choice compact"><input type="checkbox" name="owned" value="'+p.id+'"><span>'+p.name+'</span></label>').join('');
-  return '<div class="eyebrow">Your personal product finder</div><div class="intro"><h1>Let’s find what fits your routine.</h1><p class="muted">A few quick taps. You stay in control.</p></div>' +
-    '<p class="quiz-intro">I’ll ask about your skin, your concerns and what you already own. Then I’ll show a small, relevant shortlist—not a shopping list.</p>' +
-    '<div class="discovery-layout"><form id="discovery-form" class="discovery-form"><div class="quiz-progress"><span id="quiz-count">Step 1 of 5</span><div class="meter"><i id="quiz-fill" style="width:20%"></i></div></div>' +
+  return '<div class="eyebrow">Your personal skincare assistant</div><div class="intro"><h1>Let’s find what feels right for your skin.</h1><p class="muted">A short, guided conversation. You choose what to share, and you can change your answers at any time.</p></div>' +
+    '<div class="discovery-layout"><form id="discovery-form" class="discovery-form"><div class="assistant-greeting"><span class="assistant-avatar">B</span><div><strong>Hi! I’m your Bodywise Companion.</strong><p>I’ll ask one thing at a time about your skin and routine. Then I’ll explain which products may fit—and why. No pressure to buy.</p></div></div><div class="quiz-progress"><span id="quiz-count">Step 1 of 5</span><div class="meter"><i id="quiz-fill" style="width:20%"></i></div></div>' +
     '<fieldset data-quiz-step="0"><legend>1. What area would you like help with?</legend><p class="hint">Choose the area you want to focus on first.</p><div class="quiz-options">' +
     [['face','Face'],['body','Body'],['underarms','Underarms'],['feet','Feet'],['multiple','More than one area']].map(([v,l])=>'<label class="quiz-choice"><input type="radio" name="area" value="'+v+'"><span>'+l+'</span></label>').join('')+'</div></fieldset>' +
     '<fieldset data-quiz-step="1" hidden><legend>2. How would you describe your skin?</legend><p class="hint">If you are unsure, that is completely fine.</p><div class="quiz-options">' +
@@ -256,7 +255,11 @@ document.addEventListener('submit',e=>{
     target.innerHTML='<div class="result-empty"><div class="slot">No need to repurchase</div><h2>You may already have what you need.</h2><p>'+result.message+'</p><ul>'+result.ownedMatches.map(p=>'<li>'+p.name+'</li>').join('')+'</ul></div>';
     return;
   }
-  target.innerHTML='<div class="results-heading"><div class="slot">Your personalised shortlist</div><h2>Here are a few options to explore.</h2><p>These match the areas and concerns you selected. Start with one product rather than adding everything at once.</p></div><div class="match-grid">'+result.results.map(discoveryProductCard).join('')+'</div><p class="wellness-note">You can change your answers and try again. A match is not a guarantee of results or suitability. Follow each product label and introduce active products cautiously.</p>';
+  const areaLabels={face:'face',body:'body',underarms:'underarms',feet:'feet',multiple:'more than one area'};
+  const skinLabels={oily:'oily',dry:'dry',combination:'combination',normal:'normal',sensitive:'sensitive',unsure:'not sure'};
+  const concernLabels=[...data.getAll('concerns')];
+  const answerSummary='<div class="answer-summary"><strong>What you told me</strong><p>'+areaLabels[data.get('area')]+' · '+skinLabels[data.get('skinType')]+' skin · '+concernLabels.length+' concern(s) selected</p><button type="button" class="text-button" data-action="discovery-edit">Edit my answers</button></div>';
+  target.innerHTML=answerSummary+'<div class="results-heading"><div class="slot">Your personalised shortlist</div><h2>Here’s what may fit your routine.</h2><p>Based on what you shared, these products are worth exploring. You do not need all of them—start with the one that best addresses your priority.</p></div><div class="match-grid">'+result.results.map(discoveryProductCard).join('')+'</div><p class="wellness-note">I’m a guided product-discovery tool, not a dermatologist. A match is not a guarantee of results or suitability. Check your pack, patch test new products and introduce active products cautiously.</p>');
   target.scrollIntoView({behavior:'smooth',block:'start'});
 });
 document.addEventListener('submit',e=>{
@@ -299,6 +302,7 @@ document.addEventListener('click',e=>{
   const el=e.target.closest('button');
   if(!el) return;
   const act=el.dataset.action, id=el.dataset.id, slot=el.dataset.slot, b=shelf().bottles[id];
+  if(act==='discovery-edit'){document.querySelector('#discovery-form').scrollIntoView({behavior:'smooth',block:'start'});return;}
   if(act==='discovery-next'||act==='discovery-back') {
     const form=document.querySelector('#discovery-form');
     if(act==='discovery-back'){discoveryStep=Math.max(0,discoveryStep-1);updateDiscoveryStep();return;}
