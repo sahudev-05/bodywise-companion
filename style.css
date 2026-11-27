@@ -158,3 +158,50 @@ footer{border-top:1px solid var(--line);display:flex;justify-content:space-betwe
 .loyalty-activity .success{white-space:nowrap}
 #loyalty-feedback textarea{width:100%;max-width:100%;min-height:110px;padding:12px;border:1px solid var(--line);border-radius:8px;font:inherit}
 @media(max-width:650px){.loyalty-summary{grid-template-columns:1fr}.loyalty-activity{align-items:flex-start}.loyalty-activity .primary{white-space:nowrap}}
+
+
+/* Interactive product discovery */
+.discovery-layout{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(320px,.95fr);gap:22px;align-items:start}
+.discovery-form,.recommendation{background:#fff;border:1px solid var(--line);border-radius:14px;padding:clamp(18px,2.4vw,28px)}
+.quiz-intro{max-width:68ch;color:var(--muted);margin:-8px 0 18px}
+.quiz-progress{margin-bottom:25px;color:var(--muted);font-size:13px;font-weight:650}
+.quiz-progress .meter{margin:8px 0 0;height:6px}
+.quiz-progress .meter i{transition:width .2s ease}
+.discovery-form fieldset{margin:0;min-height:250px}
+.discovery-form legend{font-size:clamp(22px,2.4vw,29px);letter-spacing:-.04em;line-height:1.2;margin-bottom:8px}
+.discovery-form .hint{margin:8px 0 16px}
+.quiz-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.quiz-choice{display:flex;align-items:center;gap:10px;min-height:49px;padding:11px 13px;border:1px solid var(--line);border-radius:9px;background:#fff;cursor:pointer;font-weight:560;transition:border-color .15s,background .15s}
+.quiz-choice:has(input:checked){border-color:var(--blue);background:#edf5fb;color:var(--navy);box-shadow:inset 0 0 0 1px var(--blue)}
+.quiz-choice input{width:17px;height:17px;flex:none;margin:0}
+.quiz-choice span{font-size:14px}
+.quiz-choice.compact{min-height:unset;padding:9px}
+.owned-checks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;max-height:270px;overflow:auto;padding:2px}
+.quiz-actions{display:flex;justify-content:space-between;gap:10px;margin-top:24px}
+.quiz-actions button[hidden],.discovery-form [hidden]{display:none}
+.recommendation{min-height:360px;position:sticky;top:18px}
+.result-empty{min-height:300px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:13px}
+.result-empty h2,.results-heading h2{font-size:clamp(25px,2.5vw,34px)}
+.result-empty p,.results-heading p{color:var(--muted);font-size:14px}
+.result-orb{width:55px;height:55px;border-radius:50%;display:grid;place-items:center;background:var(--ice);color:var(--navy);font-size:26px}
+.match-grid{display:grid;grid-template-columns:1fr;gap:13px;margin-top:18px}
+.match-card{border:1px solid var(--line);border-radius:11px;padding:16px;background:#fff}
+.match-card-top{display:flex;justify-content:space-between;gap:8px;color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.product-visual{height:100px;margin:12px 0;background:radial-gradient(ellipse at center,#fff,#e8f1f7);border-radius:8px;display:flex;align-items:center;justify-content:center;gap:12px;color:var(--navy)}
+.product-visual span{width:53px;height:70px;border:1px solid #9bb5c8;border-radius:12px 12px 8px 8px;display:grid;place-items:center;background:linear-gradient(90deg,#d8e7f1,#fff,#d8e7f1);font-size:13px;font-weight:750}
+.product-visual small{max-width:110px}
+.product-size{font-size:11px;font-weight:700;color:var(--muted);margin-bottom:4px}
+.match-card h3{margin-bottom:8px}
+.match-card>p{font-size:13px;margin:8px 0;color:var(--muted)}
+.match-card .skin-note{color:var(--navy);background:var(--ice);padding:8px;border-radius:6px}
+.usage-estimator{margin:13px 0;padding:12px;border:1px solid var(--line);border-radius:8px;background:#fafcfd}
+.usage-estimator>strong{font-size:13px}
+.estimate-fields{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:8px}
+.estimate-fields label{font-size:12px}
+.estimate-fields input{font-size:14px}
+.estimate-result{font-weight:700;color:var(--navy)!important}
+.usage-estimator>small,.estimate-note{font-size:11px;line-height:1.4;display:block;color:var(--muted);margin-top:6px}
+.product-link{display:inline-block;margin-top:10px;font-size:13px}
+.results-heading{display:flex;flex-direction:column;gap:9px}
+@media(max-width:850px){.discovery-layout{grid-template-columns:1fr}.recommendation{position:static;min-height:unset}.result-empty{min-height:220px}}
+@media(max-width:520px){.quiz-options,.owned-checks{grid-template-columns:1fr}.discovery-form fieldset{min-height:300px}.estimate-fields{grid-template-columns:1fr 1fr}}
