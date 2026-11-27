@@ -1,0 +1,14 @@
+/* Expectation Match post-purchase experience */
+.expectation-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0 0 18px}
+.expectation-steps>div{display:grid;gap:6px;align-content:start;padding:16px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.expectation-steps span{font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--blue)}
+.expectation-steps strong{font-size:15px;color:var(--ink)}
+.expectation-steps small{font-size:12px;line-height:1.4}
+.expectation-report{margin:15px 0;padding:15px;border:1px solid #cbdce8;border-radius:10px;background:#f5f9fc}
+.expectation-report-title{font-size:14px;font-weight:750;color:var(--navy);margin-bottom:10px}
+.expectation-report-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.expectation-report-grid>div{min-width:0;padding:10px;background:#fff;border-radius:7px}
+.expectation-report-grid small{display:block;font-size:11px;min-height:30px}
+.expectation-report-grid strong{display:block;font-size:13px;overflow-wrap:anywhere;color:var(--ink)}
+.expectation-report>p{font-size:12px;color:var(--muted);margin-top:10px}
+@media(max-width:650px){.expectation-steps{grid-template-columns:1fr}.expectation-report-grid{grid-template-columns:1fr}.expectation-report-grid small{min-height:0}}
